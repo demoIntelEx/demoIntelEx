@@ -147,7 +147,7 @@ button{font-family:var(--font);cursor:pointer;}
 
 .rem-section{margin-bottom:14px;}
 .rem-section-title{
-  font-size:9px;font-weight:700;color:var(--accent);margin-bottom:9.5px;padding-bottom:6.5px;
+  font-size:11px;font-weight:700;color:#2f8fc4;margin-bottom:9.5px;padding-bottom:6.5px;
   border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;
 }
 /* label/field rows — each field auto-sizes to its label, then wraps naturally */
@@ -160,7 +160,7 @@ button{font-family:var(--font);cursor:pointer;}
 .rem-f label{width:109.5px;flex-shrink:0;white-space:nowrap;font-size:10px;color:var(--text2);font-weight:500;text-align:left;letter-spacing:.01em;}
 .rem-f .ctl-wrap{width:141px;flex-shrink:0;position:relative;display:flex;align-items:center;gap:5px;}
 .rem-f input,.rem-f select{
-  width:100%;height:27px;border:1.5px solid var(--border2);background:var(--panel);border-radius:6.5px;
+  width:100%;height:27px;border:1.5px solid #cfe4f7;background:#dcedfb;border-radius:6.5px;
   padding:0 9px;font-size:7.5px;font-weight:400;line-height:1;color:var(--text);font-family:var(--font);outline:none;min-width:0;
   text-align:left;box-shadow:0 1px 2px rgba(20,18,10,.04);transition:border-color .15s,box-shadow .15s,background .15s;
 }
@@ -230,17 +230,22 @@ button{font-family:var(--font);cursor:pointer;}
 /* ══ TRANSACTION FORM (scoped copy of transaction-form.html, embedded
    into the Payment Information section) ══ */
 .tf-scope{
-  --tf-field-bg:var(--panel);
-  --tf-field-border:var(--border2);
+  --tf-field-bg:#dcedfb;
+  --tf-field-border:#cfe4f7;
+  --tf-computed-bg:#ececee;
+  --tf-computed-border:#e2e2e5;
   --tf-label-color:var(--text2);
-  --tf-orange:#f5871f;
+  --tf-orange:#f0a24c;
+  --tf-tan:#d9a441;
+  --tf-red:#d9554e;
+  --tf-help:#5bb6d6;
   --tf-blue:#2f6fed;
   --tf-blue-dark:#1f4fb8;
-  --tf-green:#22b06b;
+  --tf-green:#f0a24c;
   --tf-balance-bg:#fbe9ea;
   --tf-balance-text:#c0392b;
-  --tf-currency-bg:var(--accent-dim);
-  --tf-currency-text:var(--accent);
+  --tf-currency-bg:#f5f6f8;
+  --tf-currency-text:var(--text);
   --tf-divider:var(--border);
   --tf-page-bg:var(--paper);
   color:var(--tf-label-color);
@@ -249,16 +254,16 @@ button{font-family:var(--font);cursor:pointer;}
 .tf-form-wrapper{
   border:1px solid var(--tf-divider);
   border-radius:var(--radius-sm);
-  padding:14.5px 16.5px;
+  padding:13px 15px;
   background:var(--tf-page-bg);
 }
 .tf-grid{
   display:grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap:0;
 }
 .tf-col{
-  padding:0 16px;
+  padding:0 12px;
   border-right:1px dashed var(--tf-divider);
 }
 .tf-col:last-child{
@@ -270,11 +275,11 @@ button{font-family:var(--font);cursor:pointer;}
 .tf-field-row{
   display:flex;
   align-items:center;
-  margin-bottom:11.5px;
+  margin-bottom:9px;
   gap:5px;
 }
 .tf-field-label{
-  width:84px;
+  width:68px;
   flex-shrink:0;
   font-weight:500;
   font-size:10px;
@@ -285,11 +290,11 @@ button{font-family:var(--font);cursor:pointer;}
 .tf-scope input[type="number"],
 .tf-scope select{
   width:100%;
-  height:29.5px;
-  padding:0 9.5px;
+  height:28px;
+  padding:0 8px;
   background:var(--tf-field-bg);
   border:1.5px solid var(--tf-field-border);
-  border-radius:6.5px;
+  border-radius:6px;
   font-size:7.5px;
   font-weight:400;
   line-height:1;
@@ -323,6 +328,13 @@ button{font-family:var(--font);cursor:pointer;}
 .tf-field-row-top .tf-field-label{
   padding-top:7px;
 }
+/* computed / system-derived fields (charges, rates, etc.) — muted grey fill,
+   visually distinct from the light-blue fields the teller types into */
+.tf-scope input.tf-computed{
+  background:var(--tf-computed-bg);
+  border-color:var(--tf-computed-border);
+  color:var(--text2);
+}
 .tf-scope input[type="text"]:hover,
 .tf-scope input[type="number"]:hover,
 .tf-scope textarea:hover,
@@ -341,7 +353,7 @@ button{font-family:var(--font);cursor:pointer;}
   cursor:pointer;
 }
 .tf-scope input[readonly]{
-  background:var(--paper);
+  background:var(--tf-computed-bg);
   color:var(--text3);
 }
 .tf-with-btn{
@@ -396,7 +408,7 @@ button{font-family:var(--font);cursor:pointer;}
 .tf-embed-btn.tf-icon-btn.tf-circle-btn{
   border-radius:50%;
 }
-.tf-btn-help{ background:#8a94a6; }
+.tf-btn-help{ background:var(--tf-help); }
 .tf-btn-green{
   background:var(--tf-green);
   width:29.5px;
@@ -458,6 +470,7 @@ button{font-family:var(--font);cursor:pointer;}
   justify-content:space-between;
   background:var(--tf-currency-bg);
   color:var(--tf-currency-text);
+  border:1.5px solid var(--tf-computed-border);
   border-radius:6.5px;
   padding:0 10.5px;
   font-weight:700;
@@ -470,7 +483,7 @@ button{font-family:var(--font);cursor:pointer;}
   cursor:pointer;
 }
 .tf-summary-box{
-  grid-column: 1 / 3;
+  grid-column: 1 / span 3;
   border:1px solid var(--tf-divider);
   background:var(--panel);
   border-radius:var(--radius-sm);
@@ -596,14 +609,14 @@ function remittanceFormHtml(){
           <div class="tf-form-wrapper">
             <div class="tf-grid">
 
-              <!-- COLUMN 1 -->
+              <!-- COLUMN 1 — Amounts -->
               <div class="tf-col">
                 <div class="tf-field-row">
                   <div class="tf-field-label">FC Amount</div>
                   <div class="tf-with-btn">
                     <div class="tf-input-embed">
-                      <input type="text" value="0.00" class="tf-embed-input tf-pad-wide">
-                      <button class="tf-embed-btn tf-btn-orange" style="background:var(--tf-orange);">Get Rate</button>
+                      <input type="text" value="0.00" id="tf-fc-amount" class="tf-embed-input tf-pad-wide" placeholder="0.00">
+                      <button type="button" id="tf-get-rate-btn" class="tf-embed-btn tf-btn-orange" style="background:var(--tf-red);">Get Rate</button>
                     </div>
                   </div>
                 </div>
@@ -612,17 +625,17 @@ function remittanceFormHtml(){
                   <div class="tf-field-label">LC Amount</div>
                   <div class="tf-with-btn">
                     <div class="tf-input-embed">
-                      <input type="text" value="0.00" class="tf-embed-input tf-pad-wide">
+                      <input type="text" value="0.00" id="tf-lc-amount" class="tf-embed-input tf-pad-wide" placeholder="0.00">
                       <label class="tf-checkbox-pill tf-embed-btn tf-pill-orange">
-                        <input type="checkbox" checked> Exclude
+                        <input type="checkbox" id="tf-exclude-chk"> Exclude
                       </label>
                     </div>
                   </div>
                 </div>
 
                 <div class="tf-field-row">
-                  <div class="tf-field-label">Discount</div>
-                  <input type="text" value="0.00">
+                  <div class="tf-field-label">Amount</div>
+                  <input type="text" value="0.00" id="tf-mode-amount" class="tf-computed" readonly>
                 </div>
 
                 <div class="tf-field-row">
@@ -634,62 +647,26 @@ function remittanceFormHtml(){
                     <option>Account</option>
                   </select>
                 </div>
-
-                <div class="tf-field-row">
-                  <div class="tf-field-label">Amount</div>
-                  <div class="tf-input-embed">
-                    <input type="text" value="0.00" class="tf-embed-input tf-pad-icon">
-                    <button class="tf-embed-btn tf-icon-btn tf-btn-green">+</button>
-                  </div>
-                </div>
-
-                <div class="tf-field-row">
-                  <div class="tf-field-label">LC Received</div>
-                  <input type="text" value="0.00">
-                </div>
               </div>
 
-              <!-- COLUMN 2 -->
+              <!-- COLUMN 2 — Rates & Currency -->
               <div class="tf-col">
                 <div class="tf-field-row">
-                  <div class="tf-field-label">Get Promos</div>
+                  <div class="tf-field-label">LC &gt; FC</div>
                   <div class="tf-input-embed">
-                    <select class="tf-embed-input tf-pad-wide">
-                      <option>--Select Promo--</option>
-                    </select>
-                    <button class="tf-embed-btn" style="background:var(--tf-orange);">Get Promos</button>
+                    <input type="text" value="0.00" id="tf-lc-fc" class="tf-embed-input tf-pad-icon tf-computed" readonly>
+                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="LC to FC conversion rate">?</button>
                   </div>
                 </div>
+
                 <div class="tf-field-row">
-                  <div class="tf-field-label">Charges</div>
+                  <div class="tf-field-label">FC &gt; LC</div>
                   <div class="tf-input-embed">
-                    <input type="text" value="0.00" class="tf-embed-input tf-pad-icon">
-                    <button class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="Help">?</button>
+                    <input type="text" value="0.00" id="tf-fc-lc" class="tf-embed-input tf-pad-icon tf-computed" readonly>
+                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="FC to LC conversion rate">?</button>
                   </div>
                 </div>
-                <div class="tf-field-row">
-                  <div class="tf-field-label">VAT</div>
-                  <input type="text" value="0.00">
-                </div>
 
-                <div class="tf-field-row">
-                  <div class="tf-field-label">Commission</div>
-                  <input type="text" value="0.00">
-                </div>
-
-                <div class="tf-field-row">
-                  <div class="tf-field-label">Backend</div>
-                  <input type="text" value="0.00">
-                </div>
-
-                <div class="tf-field-row">
-                  <div class="tf-field-label">Rebate</div>
-                  <input type="text" value="0.00">
-                </div>
-              </div>
-
-              <!-- COLUMN 3 -->
-              <div class="tf-col">
                 <div class="tf-field-row">
                   <div class="tf-field-label">Currency</div>
                   <div class="tf-currency-tag">
@@ -698,39 +675,77 @@ function remittanceFormHtml(){
                 </div>
 
                 <div class="tf-field-row">
-                  <div class="tf-field-label">LC &gt; FC</div>
+                  <div class="tf-field-label">LC Received</div>
+                  <input type="text" value="0.00" id="tf-lc-received" placeholder="0.00">
+                </div>
+              </div>
+
+              <!-- COLUMN 3 — Charges & Fees -->
+              <div class="tf-col">
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Charges</div>
                   <div class="tf-input-embed">
-                    <input type="text" value="0.00" class="tf-embed-input tf-pad-icon">
-                    <button class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="Help">?</button>
+                    <input type="text" value="0.00" id="tf-charges" class="tf-embed-input tf-pad-icon tf-computed" readonly>
+                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="Help">?</button>
                   </div>
                 </div>
 
                 <div class="tf-field-row">
-                  <div class="tf-field-label">FC &gt; LC</div>
+                  <div class="tf-field-label">VAT</div>
+                  <input type="text" value="0.00" id="tf-vat" class="tf-computed" readonly>
+                </div>
+
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Commission</div>
+                  <input type="text" value="0.00" class="tf-computed" readonly>
+                </div>
+
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Backend</div>
+                  <input type="text" value="0.00" class="tf-computed" readonly>
+                </div>
+              </div>
+
+              <!-- COLUMN 4 — Discounts & Promo -->
+              <div class="tf-col">
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Discount</div>
+                  <input type="text" value="0.00" class="tf-computed" readonly>
+                </div>
+
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Rebate</div>
+                  <input type="text" value="0.00" class="tf-computed" readonly>
+                </div>
+
+                <div class="tf-field-row">
+                  <div class="tf-field-label">Get Promos</div>
                   <div class="tf-input-embed">
-                    <input type="text" value="0.00" class="tf-embed-input tf-pad-icon">
-                    <button class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="Help">?</button>
+                    <select class="tf-embed-input tf-pad-wide">
+                      <option>--Select Promo--</option>
+                    </select>
+                    <button type="button" class="tf-embed-btn" style="background:var(--tf-tan);">Get Promos</button>
                   </div>
                 </div>
               </div>
 
-              <!-- COLUMN 4 (Message / Remarks, using the freed-up right side) -->
+              <!-- COLUMN 5 — Notes -->
               <div class="tf-col">
                 <div class="tf-field-row tf-field-row-top">
                   <div class="tf-field-label">Message</div>
-                  <textarea rows="3" placeholder="System transmission notes..."></textarea>
+                  <textarea rows="2" placeholder="System transmission notes..."></textarea>
                 </div>
                 <div class="tf-field-row tf-field-row-top">
                   <div class="tf-field-label">Remarks</div>
-                  <textarea rows="3" placeholder="Internal audit logs..."></textarea>
+                  <textarea rows="2" placeholder="Internal audit logs..."></textarea>
                 </div>
               </div>
 
-              <!-- SUMMARY ROW: spans columns 2 & 3 -->
+              <!-- SUMMARY ROW: spans 3 of the 5 columns -->
               <div class="tf-summary-box">
-                <span>Total LC: <strong>0.00</strong></span>
-                <span>Balance Pay: <strong>0.00</strong></span>
-                <span>FC Rec: <strong>0.00</strong></span>
+                <span>Total LC: <strong id="tf-total-lc">0.00</strong></span>
+                <span>Balance Pay: <strong id="tf-balance-pay">0.00</strong></span>
+                <span>FC Rec: <strong id="tf-fc-rec">0.00</strong></span>
               </div>
 
             </div>
@@ -753,6 +768,140 @@ document.getElementById('rem-main-inner').innerHTML = remittanceFormHtml();
 document.querySelector('.mp-back').addEventListener('click', function(){
   if (window.history.length > 1) window.history.back();
 });
+
+/* ══ PAYMENT INFORMATION — remittance calculation ══
+   Practical exchange-house calc chain:
+
+   Rates
+     LC > FC  = 25.75, fetched via "Get Rate"
+     FC > LC  = 1 / (LC > FC), shown to 8 decimal places
+
+   Forward path (customer types the FC Amount, then clicks "Get Rate"):
+     LC Amount = FC Amount / (LC > FC)
+   Reverse path (teller types the LC Amount directly, once a rate has
+   been fetched at least once):
+     FC Amount = LC Amount x (LC > FC)
+
+   Charges = 10.00 (flat), VAT = 0.50 (flat)
+   Amount ("Mode Amount")  = LC Amount + Charges + VAT
+   Total LC   = Amount
+   FC Rec     = FC Amount
+
+   LC Received is typed in by the user (not calculated).
+   Balance Pay = LC Received - Amount, shown in red when negative.
+
+   "Exclude" subtracts Charges + VAT from the current LC Amount (the
+   field itself is reduced), then FC Amount and Amount are recalculated
+   from that new LC Amount. Unchecking it adds Charges + VAT back and
+   recalculates again. */
+(function(){
+  var fcAmountEl   = document.getElementById('tf-fc-amount');
+  var lcAmountEl   = document.getElementById('tf-lc-amount');
+  var excludeChk   = document.getElementById('tf-exclude-chk');
+  var lcReceivedEl = document.getElementById('tf-lc-received');
+  var lcToFcEl     = document.getElementById('tf-lc-fc');
+  var fcToLcEl     = document.getElementById('tf-fc-lc');
+  var chargesEl    = document.getElementById('tf-charges');
+  var vatEl        = document.getElementById('tf-vat');
+  var amountEl     = document.getElementById('tf-mode-amount');
+  var getRateBtn   = document.getElementById('tf-get-rate-btn');
+  var totalLcEl    = document.getElementById('tf-total-lc');
+  var balancePayEl = document.getElementById('tf-balance-pay');
+  var fcRecEl      = document.getElementById('tf-fc-rec');
+
+  if (!fcAmountEl || !getRateBtn) return; // markup not present, skip silently
+
+  var CHARGE  = 10.00;   // flat handling charge
+  var VAT     = 0.50;    // flat VAT
+  var rate    = null;    // LC > FC, populated once "Get Rate" is clicked
+  var syncing = false;   // guards against the two amount fields re-triggering each other
+
+  function fmt(n){ return (Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2); }
+  function fmt8(n){ return (Math.round((n + Number.EPSILON) * 1e8) / 1e8).toFixed(8); }
+  function num(el){ var v = parseFloat(el.value); return isNaN(v) ? 0 : v; }
+
+  function fetchRate(){
+    // A live integration would call the rate service for the selected
+    // destination currency/bank here. Fixed rate used here.
+    return 25.75; // LC > FC
+  }
+
+  function updateBalancePay(){
+    var balance = num(lcReceivedEl) - num(amountEl);
+    balancePayEl.textContent = fmt(balance);
+    balancePayEl.style.color = balance < 0 ? 'var(--red)' : '';
+  }
+
+  function applyChargesAndTotals(lc, fc){
+    var amount = lc + CHARGE + VAT;         // Amount = LC Amount + Charge + VAT
+
+    chargesEl.value = fmt(CHARGE);
+    vatEl.value     = fmt(VAT);
+    amountEl.value  = fmt(amount);
+
+    totalLcEl.textContent = amountEl.value; // Total LC = Amount
+    fcRecEl.textContent   = fmt(fc);        // FC Rec = FC Amount
+
+    updateBalancePay();                     // Balance Pay = LC Received - Amount
+  }
+
+  function recalcFromFc(){
+    if (rate === null) return;
+    var fc = num(fcAmountEl);
+    var lc = fc / rate;                 // LC Amount = FC Amount / (LC > FC)
+    syncing = true;
+    lcAmountEl.value = fmt(lc);
+    syncing = false;
+    applyChargesAndTotals(lc, fc);
+  }
+
+  function recalcFromLc(){
+    if (rate === null) return;
+    var lc = num(lcAmountEl);
+    var fc = lc * rate;                 // FC Amount = LC Amount x (LC > FC)
+    syncing = true;
+    fcAmountEl.value = fmt(fc);
+    syncing = false;
+    applyChargesAndTotals(lc, fc);
+  }
+
+  getRateBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    rate = fetchRate();
+    lcToFcEl.value = fmt(rate);
+    fcToLcEl.value = fmt8(1 / rate);     // FC > LC = 1 / (LC > FC), 8 decimals
+    recalcFromFc();
+  });
+
+  fcAmountEl.addEventListener('input', function(){
+    if (syncing) return;
+    recalcFromFc();
+  });
+
+  lcAmountEl.addEventListener('input', function(){
+    if (syncing) return;
+    recalcFromLc();
+  });
+
+  lcReceivedEl.addEventListener('input', function(){
+    updateBalancePay();
+  });
+
+  if (excludeChk) {
+    excludeChk.addEventListener('change', function(){
+      // Minus (or add back) Charge + VAT to/from the LC Amount itself,
+      // then recalculate FC Amount and Amount from the new LC Amount.
+      var currentLc = num(lcAmountEl);
+      var newLc = excludeChk.checked ? (currentLc - CHARGE - VAT) : (currentLc + CHARGE + VAT);
+      var newFc = rate !== null ? newLc * rate : num(fcAmountEl);
+
+      lcAmountEl.value = fmt(newLc);
+      fcAmountEl.value = fmt(newFc);
+      applyChargesAndTotals(newLc, newFc);
+    });
+  }
+})();
+
 </script>
 </body>
 </html>
