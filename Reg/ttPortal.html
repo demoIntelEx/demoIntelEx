@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-<script src="https://effimalik.github.io/Testing/shared/cacheWatcher.js?v=1"></script>
 
 <style>
 /* ═══ THEME (unchanged — matches rest of AP2 Fleet) ═══ */
@@ -98,13 +97,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .page-desc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media(max-width:760px){.page-desc{display:none;}}
 .page-header-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;margin-left:auto;}
-
-.cache-dot{width:10px;height:10px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .3s,box-shadow .3s;}
-.cache-dot.ok{background:var(--teal);box-shadow:0 0 6px var(--teal);}
-.cache-dot.warn{background:var(--amber);box-shadow:0 0 6px var(--amber);}
-.cache-dot.loading{background:var(--accent);animation:pulse-dot 1s ease-in-out infinite;}
-@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
-#cache-status{display:inline-flex;align-items:center;cursor:default;padding:4px;gap:6px;font-size:11px;color:var(--text3);}
 
 /* ═══ TOOLBAR / SELECTOR BAR ═══ */
 .field{display:flex;flex-direction:column;gap:5px;}
@@ -275,14 +267,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="page-header">
     <div class="page-header-text">
       <div class="page-title"><i class="ti ti-file-certificate"></i> Doc Portal</div>
-      <p class="page-desc"><i class="ti ti-info-circle"></i><span>Transaction &amp; onboarding documents · ap2_docLog</span></p>
+      <p class="page-desc"><i class="ti ti-info-circle"></i><span>Upload, review &amp; track KYC and transaction documents (Receipts, EDD, Source, EID, Passport, Visa) for every entity, and generate EDD forms for transactions</span></p>
     </div>
     <div class="page-header-controls">
-      <div id="cache-status" title="Loading cache…">
-        <div class="cache-dot loading" id="cache-dot"></div>
-        <span id="cache-status-text"></span>
-      </div>
-
       <div class="tab-nav">
         <button class="tab-btn active" id="filter-all" title="All" onclick="setPortalFilter('all')"><i class="ti ti-stack-2"></i></button>
         <button class="tab-btn" id="filter-transaction" title="Transaction" onclick="setPortalFilter('transaction')"><i class="ti ti-receipt"></i></button>
@@ -301,7 +288,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         </div>
       </div>
 
-      <button class="btn btn-danger-ghost btn-sm" id="btn-clear-cache" onclick="handleClearCache()" title="Clear documents saved via the local cache (does not touch HARDCODED_DOC_LOG)"><i class="ti ti-trash"></i> Clear Cached Uploads</button>
+      <button class="btn btn-ghost btn-sm" id="btn-download-edd" style="display:none;" onclick="openEDDPreview(selectedKey)" title="Generate an EDD form for the selected transaction"><i class="ti ti-file-download"></i> Download EDD Form</button>
       <button class="btn btn-primary btn-sm" id="btn-upload-selected" style="display:none;" onclick="openUploadFlow(selectedKey)"><i class="ti ti-upload"></i> Upload Document</button>
     </div>
   </div>
@@ -394,6 +381,24 @@ const HARDCODED_DOC_LOG = [
   ['1788908760','Onboarding','87387731','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
   ['1788908820','Onboarding','87387731','ID','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
   ['1788908880','Onboarding','87387731','Passport','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
+
+  /* Extra demo history — same month (September 2026), spread across
+     different days so the date filter and table have more to show. */
+  ['1788254100','Transaction','260515265340','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+  ['1788254400','Transaction','260515265340','EDD','',''],
+  ['1788347100','Onboarding','55021837','ID','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788347100'],
+  ['1788349200','Onboarding','55021837','Passport','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788347100'],
+  ['1788445500','Transaction','260515265341','Receipt','',''],
+  ['1788447000','Transaction','260515265341','Source','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+  ['1788511500','Onboarding','61829304','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788511500'],
+  ['1788538200','Transaction','2','EDD','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+  ['1788604200','Onboarding','77321044','ID','',''],
+  ['1788630900','Transaction','260515265342','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+  ['1788685200','Onboarding','87387731','ICP Status','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788685200'],
+  ['1788700800','Transaction','260515265343','Receipt','',''],
+  ['1788783300','Transaction','260515265343','Source','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+  ['1788795600','Onboarding','30545112','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788795600'],
+  ['1788861900','Transaction','260515265344','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -730,19 +735,6 @@ function toast(msg,type='success'){
 /* ═══════════════════════════════════════════════════════
  *  LOAD
  * ═══════════════════════════════════════════════════════ */
-function _updateCacheStatus(){
-  const dot = document.getElementById('cache-dot');
-  const txt = document.getElementById('cache-status-text');
-  if(!dot) return;
-  if(logRows.length || employees.length || bikes.length){
-    dot.className='cache-dot ok';
-    txt.textContent = `${transactions.length} txns · ${logRows.length} docs`;
-  } else {
-    dot.className='cache-dot warn';
-    txt.textContent = 'Fleet cache unavailable';
-  }
-}
-
 async function loadDocLog(){
   // HARDCODED_DOC_LOG ships with the page; anything uploaded through
   // the UI lives in the localStorage cache on top of it. No network
@@ -766,7 +758,6 @@ async function loadInitialData(){
 
   await loadDocLog();
   buildTransactions();
-  _updateCacheStatus();
   renderTable();
 }
 
@@ -782,7 +773,6 @@ async function _applyFromIDB(){
   }catch(e){}
   await loadDocLog();
   buildTransactions();
-  _updateCacheStatus();
   renderTable();
 }
 
@@ -803,7 +793,6 @@ function _applyPushedDataset(key, data, ts){
     if(fresh.length) bikes = fresh;
   }
   buildTransactions();
-  _updateCacheStatus();
   renderTable();
 }
 
@@ -996,6 +985,10 @@ function toggleSelect(key){
 function updateSelectionUI(){
   const btn = document.getElementById('btn-upload-selected');
   btn.style.display = selectedKey ? 'inline-flex' : 'none';
+
+  const eddBtn = document.getElementById('btn-download-edd');
+  const t = selectedKey ? transactions.find(x=>x.key===selectedKey) : null;
+  eddBtn.style.display = (t && t.portal==='transaction') ? 'inline-flex' : 'none';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1099,6 +1092,173 @@ function renderDocGallery(key,activeIdx){
       <div class="pmi"><span class="k">Upload Date</span><span class="v" style="font-size:10px;">${d.txnId}</span></div>
       <div class="pmi"><span class="k">Date Creation</span><span class="v">${fmtEpochSec(+d.txnId)}</span></div>
       ${d.expiryTs?`<div class="pmi"><span class="k">Exp Date</span><span class="v">${fmtEpochSec(d.expiryTs,false)}</span></div>`:''}`);
+}
+
+/* ═══════════════════════════════════════════════════════
+ *  EDD FORM — generated for a selected Transaction-portal row.
+ *  Pulls every known detail for that entity's transaction(s) into
+ *  a printable Enhanced Due Diligence form, shown as an on-screen
+ *  preview in the slide panel with a Print button. Printing opens
+ *  a clean popup window containing only the form and calls the
+ *  browser print dialog — from there the user can "Save as PDF".
+ * ═══════════════════════════════════════════════════════ */
+let _eddFormHtml = '';
+
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* Builds the full standalone HTML document for the EDD form (used
+   both for the on-screen preview and for the print popup, so what
+   you preview is exactly what prints). */
+function buildEDDFormHtml(t){
+  const name = resolveEntityName(t.entityId) || '—';
+  const docs = docsWithFile(t);
+  const latestTxn = t.docs[0] || {};
+  const generatedOn = fmtEpochSec(nowEpochSec());
+
+  const docRows = docs.length ? docs.map(d=>{
+    const expired = d.expiryTs && (d.expiryTs*1000 < Date.now());
+    return `<tr>
+      <td>${escapeHtml(docTypeLabel(t.portal,d.docType))}</td>
+      <td class="mono">${escapeHtml(d.txnId)}</td>
+      <td>${escapeHtml(fmtEpochSec(+d.txnId))}</td>
+      <td>${d.expiryTs?escapeHtml(fmtEpochSec(d.expiryTs,false)):'—'}${d.expiryTs?` <span class="${expired?'flag-bad':'flag-ok'}">${expired?'(Expired)':'(Valid)'}</span>`:''}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;color:#888;">No supporting documents on file</td></tr>`;
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"/><title>EDD Form — ${escapeHtml(t.entityId)}</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Arial,sans-serif;color:#111;background:#fff;margin:0;padding:28px 34px;font-size:12.5px;line-height:1.5;}
+  .edd-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0d1117;padding-bottom:12px;margin-bottom:16px;}
+  .edd-title{font-size:19px;font-weight:800;letter-spacing:.02em;}
+  .edd-sub{font-size:11px;color:#555;margin-top:3px;}
+  .edd-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:#0d1117;color:#fff;padding:5px 11px;border-radius:20px;}
+  .section{margin-bottom:16px;}
+  .section h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#444;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:9px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;}
+  .kv{display:flex;justify-content:space-between;border-bottom:1px dotted #bbb;padding:4px 0;gap:10px;}
+  .kv .k{color:#555;}
+  .kv .v{font-weight:700;text-align:right;font-family:'Consolas',monospace;font-size:11.5px;}
+  table.doc-tbl{width:100%;border-collapse:collapse;font-size:11.5px;}
+  table.doc-tbl th{background:#f0f2f5;text-align:left;padding:6px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#444;border:1px solid #ddd;}
+  table.doc-tbl td{padding:6px 8px;border:1px solid #ddd;}
+  .mono{font-family:'Consolas',monospace;}
+  .flag-ok{color:#116329;font-weight:700;}
+  .flag-bad{color:#a8111b;font-weight:700;}
+  .fill-line{border-bottom:1px solid #999;min-height:26px;margin-top:4px;}
+  .sign-row{display:flex;gap:30px;margin-top:26px;}
+  .sign-col{flex:1;}
+  .sign-col .cap{font-size:10px;color:#555;margin-top:4px;}
+  .edd-footer{margin-top:26px;padding-top:10px;border-top:1px solid #ccc;font-size:9.5px;color:#888;display:flex;justify-content:space-between;}
+  @media print{ body{padding:14px 20px;} }
+</style>
+</head><body>
+
+  <div class="edd-header">
+    <div>
+      <div class="edd-title">Enhanced Due Diligence (EDD) Form</div>
+      <div class="edd-sub">Transaction Document Portal · ap2_docLog</div>
+    </div>
+    <span class="edd-badge">Transaction</span>
+  </div>
+
+  <div class="section">
+    <h4>Transaction / Entity Details</h4>
+    <div class="grid">
+      <div class="kv"><span class="k">Entity ID</span><span class="v">${escapeHtml(t.entityId)}</span></div>
+      <div class="kv"><span class="k">Entity Name</span><span class="v">${escapeHtml(name)}</span></div>
+      <div class="kv"><span class="k">Portal</span><span class="v">Transaction</span></div>
+      <div class="kv"><span class="k">Latest Transaction ID</span><span class="v">${escapeHtml(latestTxn.txnId||'—')}</span></div>
+      <div class="kv"><span class="k">Transaction Date</span><span class="v">${escapeHtml(fmtEpochSec(toEpochSec(t.ts)))}</span></div>
+      <div class="kv"><span class="k">Documents on File</span><span class="v">${docs.length}</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h4>Supporting Documents</h4>
+    <table class="doc-tbl">
+      <thead><tr><th>Doc Type</th><th>Txn ID</th><th>Upload Date</th><th>Expiry</th></tr></thead>
+      <tbody>${docRows}</tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h4>Due Diligence Assessment <span style="font-weight:400;color:#888;text-transform:none;">(to be completed by reviewer)</span></h4>
+    <div class="grid">
+      <div>
+        <div style="font-size:10px;color:#555;">Source of Funds</div>
+        <div class="fill-line"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#555;">Nature &amp; Purpose of Transaction</div>
+        <div class="fill-line"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#555;">Risk Rating</div>
+        <div class="fill-line"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#555;">PEP / Sanctions Screening Result</div>
+        <div class="fill-line"></div>
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <div style="font-size:10px;color:#555;">Additional Remarks</div>
+      <div class="fill-line" style="min-height:52px;"></div>
+    </div>
+  </div>
+
+  <div class="sign-row">
+    <div class="sign-col"><div class="fill-line"></div><div class="cap">Reviewed By (Name &amp; Signature)</div></div>
+    <div class="sign-col"><div class="fill-line"></div><div class="cap">Date of Review</div></div>
+    <div class="sign-col"><div class="fill-line"></div><div class="cap">Approved By (Compliance)</div></div>
+  </div>
+
+  <div class="edd-footer">
+    <span>Generated ${escapeHtml(generatedOn)}</span>
+    <span>Doc Portal · Entity ${escapeHtml(t.entityId)}</span>
+  </div>
+
+</body></html>`;
+}
+
+function openEDDPreview(key){
+  const t = transactions.find(x=>x.key===key);
+  if(!t){ toast('Select a row first','error'); return; }
+  if(t.portal!=='transaction'){ toast('EDD form is only available for Transaction rows','error'); return; }
+
+  _eddFormHtml = buildEDDFormHtml(t);
+
+  openPanel('ti-file-download','EDD Form Preview', true);
+  clearHeadMeta();
+
+  const body = document.getElementById('dp-body');
+  body.innerHTML = `
+    <div class="preview-toolbar">
+      <div style="font-size:11.5px;color:var(--text3);"><i class="ti ti-info-circle"></i> Auto-filled from this transaction's records — review before printing.</div>
+      <button class="btn btn-primary btn-sm" onclick="printEDDForm()"><i class="ti ti-printer"></i> Print / Save as PDF</button>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px;">
+      <iframe id="edd-preview-frame" style="width:100%;height:62vh;min-height:420px;border:none;border-radius:var(--radius);background:#fff;"></iframe>
+    </div>`;
+
+  const frame = document.getElementById('edd-preview-frame');
+  frame.srcdoc = _eddFormHtml;
+}
+
+function printEDDForm(){
+  if(!_eddFormHtml){ toast('Nothing to print yet','error'); return; }
+  const w = window.open('', '_blank', 'width=850,height=1000');
+  if(!w){ toast('Pop-up blocked — allow pop-ups to print the EDD form','error'); return; }
+  w.document.open();
+  w.document.write(_eddFormHtml);
+  w.document.close();
+  w.onload = () => { w.focus(); w.print(); };
+  // Fallback in case onload already fired before we attached it.
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1220,18 +1380,6 @@ function renderConfirmStep(){
     </div>`;
 }
 
-/* Demo control: clears everything written to the local cache by
-   submitUpload(), leaving only HARDCODED_DOC_LOG. Shows the full
-   round trip — write on click, read on load, clear on click. */
-async function handleClearCache(){
-  clearLocalCache();
-  await loadDocLog();
-  buildTransactions();
-  _updateCacheStatus();
-  renderTable();
-  toast('Cached uploads cleared');
-}
-
 /* ═══════════════════════════════════════════════════════
  *  SUBMIT — practical "save to cache on button click" example.
  *  Clicking "Confirm Upload" does three real, observable things,
@@ -1289,7 +1437,6 @@ async function submitUpload(){
     await loadDocLog();
     buildTransactions();
     selectedKey = groupKey(s.portal,s.entityId);
-    _updateCacheStatus();
     renderTable();
     closePanel();
   },900);
