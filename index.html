@@ -9,131 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     AP2 IDB Bridge — all data served from IndexedDB via AdminPro
-     ═══════════════════════════════════════════════════════════════ -->
-<script>
-'use strict';
-
-/* ── Constants used by child pages ── */
-window.AP2_VS_ROWS  = 20;
-
-/* ══ AP2Cache — thin IDB-backed API (wraps AdminPro._cache) ══
-   All reads/writes go through IndexedDB via dataLayer.js.
-   No in-memory store, no static data, no shadow Maps.          */
-window.AP2Cache = {
-  async set(key, data) {
-    if (window.AdminPro) AdminPro.cache.set(key, data);
-  },
-  async get(key) {
-    return window.AdminPro ? AdminPro.cache.get(key) : null;
-  },
-  async getData(key) {
-    const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-    return e ? e.data : null;
-  },
-  async getTs(key) {
-    const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-    return e ? e.ts : null;
-  },
-  async getAge(key) {
-    const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-    return e ? Date.now() - e.ts : Infinity;
-  },
-  async delete(key) {
-    if (window.AdminPro) AdminPro.cache.clear(key);
-  },
-  async clearAll() {
-    if (window.AdminPro) AdminPro.cache.clearAll();
-  },
-  async keys() {
-    return window.AdminPro ? Object.keys(AdminPro.getActiveDatasets()) : [];
-  },
-  /* Stream-query directly from IDB — row-by-row filter, no full clone */
-  async streamQuery(key, predicateFn) {
-    if (window.AdminPro) return AdminPro.streamQuery(key, predicateFn);
-    return [];
-  },
-  async count(key) {
-    const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-    return e && Array.isArray(e.data) ? e.data.length : 0;
-  },
-  onChange(_fn) { /* no-op — IDB writes are observed via AdminPro */ },
-};
-
-/* ══ _AP2Shadow — thin Map-like proxy over AdminPro.cache ══
-   Lets legacy call sites keep using .age.get/.set/.delete/.clear/.entries()
-   and .data.get/.set/.delete/.clear/.entries() without maintaining a
-   separate in-memory copy. Reads always reflect AdminPro.cache (IDB-backed);
-   writes/deletes are routed back into AdminPro.cache so both "maps" stay
-   in sync automatically. */
-(function () {
-  function activeEntries(pick) {
-    if (!window.AdminPro || typeof AdminPro.getActiveDatasets !== 'function') return [];
-    const out = [];
-    for (const key of Object.keys(AdminPro.getActiveDatasets())) {
-      const e = AdminPro.cache.get(key);
-      if (e) out.push([key, pick(e)]);
-    }
-    return out;
-  }
-
-  const dataShadow = {
-    get(key) {
-      const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-      return e ? e.data : undefined;
-    },
-    set(_key, _value) { /* no-op — AdminPro.cache is already the source of truth */ },
-    has(key) {
-      const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-      return !!(e && e.data !== undefined && e.data !== null);
-    },
-    delete(key) {
-      if (window.AdminPro) AdminPro.cache.clear(key);
-      return true;
-    },
-    clear() {
-      if (window.AdminPro) AdminPro.cache.clearAll();
-    },
-    entries() {
-      return activeEntries(e => e.data).filter(([, d]) => d != null)[Symbol.iterator]();
-    },
-    keys() {
-      return activeEntries(e => e.data).filter(([, d]) => d != null).map(([k]) => k)[Symbol.iterator]();
-    },
-  };
-
-  const ageShadow = {
-    get(key) {
-      const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-      return e ? e.ts : undefined;
-    },
-    set(_key, _ts) { /* no-op — AdminPro.cache is already the source of truth */ },
-    has(key) {
-      const e = window.AdminPro ? AdminPro.cache.get(key) : null;
-      return !!e;
-    },
-    delete(key) {
-      if (window.AdminPro) AdminPro.cache.clear(key);
-      return true;
-    },
-    clear() {
-      if (window.AdminPro) AdminPro.cache.clearAll();
-    },
-    entries() {
-      return activeEntries(e => e.ts)[Symbol.iterator]();
-    },
-    keys() {
-      return activeEntries(e => e.ts).map(([k]) => k)[Symbol.iterator]();
-    },
-  };
-
-  window._AP2Shadow = { data: dataShadow, age: ageShadow };
-})();
-
-console.log('[AP2] IDB bridge ready — all data served from IndexedDB via AdminPro');
-</script>
-
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
@@ -1187,12 +1062,6 @@ console.log('[AP2] IDB bridge ready — all data served from IndexedDB via Admin
         </div>
       </div>
 
-      <!-- Cache Status Button — icon + signal dot only -->
-      <button class="tb-cache-btn" id="cache-status-btn" onclick="toggleCachePanel(event)" title="Cache Status">
-        <i class="ti ti-database"></i>
-        <span class="cache-dot" id="cache-health-dot"></span>
-        <span class="cache-miss-badge" id="cache-miss-badge"></span>
-      </button>
 
       <div class="tb-vsep"></div>
 
@@ -1310,66 +1179,6 @@ console.log('[AP2] IDB bridge ready — all data served from IndexedDB via Admin
   </nav>
 </div>
 
-<!-- ══ CACHE STATUS PANEL ══ -->
-<div class="cache-panel" id="cache-panel">
-  <div class="cp-header">
-    <div class="cp-title">
-      <i class="ti ti-database"></i>
-      Cache Status
-    </div>
-    <div class="cp-actions">
-      <button class="cp-action-btn" onclick="toggleMissChecker()" title="Cache miss checker" style="color:var(--amber);">
-        <i class="ti ti-alert-triangle"></i> Checker
-      </button>
-      <button class="cp-action-btn" onclick="refreshAllCache()" title="Hard refresh all datasets">
-        <i class="ti ti-refresh"></i> Refresh All
-      </button>
-      <button class="cp-action-btn danger" onclick="deleteAllCache()" title="Clear entire cache">
-        <i class="ti ti-trash"></i> Clear All
-      </button>
-    </div>
-  </div>
-  <div class="cp-scroll">
-  <table class="cp-table">
-    <colgroup>
-      <col style="width:36%"/>
-      <col style="width:22%"/>
-      <col style="width:28%"/>
-      <col style="width:14%"/>
-    </colgroup>
-    <thead>
-      <tr class="cp-col-hdr">
-        <th>Dataset</th>
-        <th class="cp-col-sync">Last Sync / TTL</th>
-        <th class="cp-col-status-rem">Status / Remaining</th>
-        <th style="text-align:center;">Actions</th>
-      </tr>
-    </thead>
-    <tbody id="cache-table-body">
-      <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px;">Loading cache info…</td></tr>
-    </tbody>
-  </table>
-  </div>
-  <div class="cp-footer">
-    <span class="cp-footer-note"><i class="ti ti-database"></i> In-memory data store · Static dataset · Stream-queried &amp; virtual-scrolled</span>
-    <span id="cp-last-check">—</span>
-  </div>
-</div>
-<!-- ══ CACHE MISS CHECKER PANEL ══ -->
-<div class="cm-panel" id="cm-panel">
-  <div class="cm-header">
-    <div class="cm-title"><i class="ti ti-alert-triangle"></i>Cache Checker</div>
-    <span id="cm-last-scan" style="font-size:9.5px;color:var(--text3);margin-right:6px;"></span>
-    <button class="cm-close" onclick="closeMissPanel()" title="Close"><i class="ti ti-x"></i></button>
-  </div>
-  <div class="cm-body" id="cm-body">
-    <div style="text-align:center;color:var(--text3);padding:20px;font-size:11px;">Scanning…</div>
-  </div>
-  <div class="cm-footer-strip">
-    <span id="cm-summary">—</span>
-    <button onclick="cmScanAll()"><i class="ti ti-refresh"></i> Re-scan</button>
-  </div>
-</div>
 
 <!-- ══ PROFILE / LOGOUT POPUP ══ -->
 <div class="pm-overlay" id="pm-overlay">
@@ -1398,141 +1207,6 @@ console.log('[AP2] IDB bridge ready — all data served from IndexedDB via Admin
    ════════════════════════════════════════════ */
 function _logEvent() {} // no-op; kept so cache functions compile without change
 
-/* ════════════════════════════════════════════
-   CACHE MISS CHECKER
-   ════════════════════════════════════════════ */
-let _cmPanelOpen = false;
-let _cmAutoHideTimer = null;
-
-function toggleMissChecker() {
-  _cmPanelOpen = !_cmPanelOpen;
-  const p = document.getElementById('cm-panel');
-  if (_cmPanelOpen) {
-    p.classList.add('open');
-    cmScanAll();
-    p.removeEventListener('mouseleave', _onCmLeave);
-    p.removeEventListener('mouseenter', _onCmEnter);
-    p.addEventListener('mouseleave', _onCmLeave);
-    p.addEventListener('mouseenter', _onCmEnter);
-    _resetCmAutoHide();
-  } else {
-    closeMissPanel();
-  }
-}
-
-function _onCmLeave()  { _resetCmAutoHide(); }
-function _onCmEnter()  { if (_cmAutoHideTimer) { clearTimeout(_cmAutoHideTimer); _cmAutoHideTimer = null; } }
-
-function closeMissPanel() {
-  _cmPanelOpen = false;
-  const p = document.getElementById('cm-panel');
-  p?.classList.remove('open');
-  p?.removeEventListener('mouseleave', _onCmLeave);
-  p?.removeEventListener('mouseenter', _onCmEnter);
-  if (_cmAutoHideTimer) { clearTimeout(_cmAutoHideTimer); _cmAutoHideTimer = null; }
-}
-
-function _resetCmAutoHide() {
-  if (_cmAutoHideTimer) clearTimeout(_cmAutoHideTimer);
-  _cmAutoHideTimer = setTimeout(closeMissPanel, 3000);
-}
-
-function cmScanAll() {
-  const body = document.getElementById('cm-body');
-  const summary = document.getElementById('cm-summary');
-  const lastScan = document.getElementById('cm-last-scan');
-  if (!body) return;
-
-  const now = new Date();
-  if (lastScan) lastScan.textContent = 'Scanned ' + now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-
-  const results = Object.entries(DS_META).map(([key, meta]) => {
-    const ageMs = getCacheAge(key);
-    const hasData = (() => { try { const d = getCacheData(key); return Array.isArray(d) ? d.length > 0 : d != null; } catch(_){ return false; } })();
-    const fresh = ageMs < meta.ttlMs;
-    const status = !hasData ? 'miss' : !fresh ? 'stale' : 'ok';
-    return { key, label: meta.label, status, meta, ageMs };
-  });
-
-  const misses = results.filter(r => r.status === 'miss').length;
-  const stales = results.filter(r => r.status === 'stale').length;
-  if (summary) {
-    if (misses === 0 && stales === 0) summary.textContent = 'All ' + results.length + ' healthy';
-    else summary.textContent = (misses ? misses + ' miss' : '') + (misses && stales ? ', ' : '') + (stales ? stales + ' stale' : '');
-  }
-
-  const missTotal = misses + stales;
-  const badge = document.getElementById('cache-miss-badge');
-  if (badge) {
-    badge.textContent = missTotal || '';
-    badge.classList.toggle('show', missTotal > 0);
-  }
-
-  // Only update visible rows when panel is open
-  if (!_cmPanelOpen) {
-    if (_cmPanelOpen) _resetCmAutoHide();
-    return;
-  }
-
-  body.innerHTML = results.map(r => {
-    const badgeCls = r.status === 'miss' ? 'miss' : r.status === 'stale' ? 'stale' : 'ok';
-    const badgeTxt = r.status === 'miss' ? 'MISS' : r.status === 'stale' ? 'STALE' : 'OK';
-    const ageStr = r.ageMs === Infinity ? 'Never loaded' : r.ageMs < 60000 ? Math.floor(r.ageMs/1000)+'s ago' : Math.floor(r.ageMs/60000)+'m ago';
-    return `<div class="cm-row ${r.status !== 'ok' ? r.status : ''}">
-      <span class="cm-row-name">${r.label}</span>
-      <span class="cm-row-info">${ageStr}</span>
-      <span class="cm-row-badge ${badgeCls}">${badgeTxt}</span>
-      <button class="cm-row-btn" id="cmbtn-${r.key}" onclick="cmRefresh('${r.key}',this)" title="Force refresh">
-        <i class="ti ti-refresh"></i>
-      </button>
-    </div>`;
-  }).join('');
-
-  if (_cmPanelOpen) _resetCmAutoHide();
-}
-
-async function cmRefresh(key, btn) {
-  btn.classList.add('spin');
-  btn.disabled = true;
-  _logEvent('refresh', 'Cache refresh triggered:', key);
-  try {
-    if (window.AdminPro && AdminPro.forceRefresh) {
-      await AdminPro.forceRefresh(key);
-    } else {
-      await AP2Cache.delete(key);
-    }
-    setTimeout(() => { cmScanAll(); renderCacheTable(); updateCacheHealthDot(); _notifyFrame(); }, 300);
-  } catch(e) {
-    _logEvent('miss', 'Refresh error:', key);
-  } finally {
-    btn.classList.remove('spin');
-    btn.disabled = false;
-  }
-}
-
-/* ══ CACHE CHANGE WATCHER ══ */
-(function _watchCache() {
-  AP2Cache.onChange(async (key, op) => {
-    if (op === 'set') {
-      const rec = await AP2Cache.get(key).catch(() => null);
-      if (rec) {
-        window._AP2Shadow.age.set(key, rec.ts);
-        window._AP2Shadow.data.set(key, rec.data);
-      }
-      _logEvent('cache', 'Cache updated:', key);
-    } else if (op === 'delete') {
-      window._AP2Shadow.age.delete(key);
-      window._AP2Shadow.data.delete(key);
-      _logEvent('delete', 'Cache deleted:', key);
-    } else if (op === 'clear') {
-      window._AP2Shadow.age.clear();
-      window._AP2Shadow.data.clear();
-      _logEvent('delete', 'ALL cache cleared', '');
-    }
-    updateCacheHealthDot();
-    if (_cmPanelOpen) cmScanAll();
-  });
-})();
 
 
 /* ══ SECTION MAP ══
@@ -1659,75 +1333,36 @@ const SECTIONS = {
 let activeSection = null;
 let sidebarVisible = true;
 
-/* The Permissions sheet/session stores each granted dataset as an info
-   object: { label, apiKey, paramKey:'type', ttlMs, access:{view,add,editDelete} }.
-   Nav visibility is gated on the VIEW bit specifically — a dataset present
-   with add/editDelete but no view shouldn't show up in the nav. Legacy
-   boolean shape (perms[key] === true) is still treated as view-only. */
-function _hasPerm(perms, key) {
-  if (!perms || !perms[key]) return false;
-  const p = perms[key];
-  if (p === true) return true;
-  return !!(p.access && p.access.view === true);
+/* No backend permissions system — every nav item is always visible. */
+function _hasPerm() {
+  return true;
 }
 
-/* ══ PERMISSIONS — show/hide nav buttons based on Permissions sheet ══
-   Called once on load (after Auth.getPermissions() is available) and
-   again if permissions are refreshed during the session.
-
-   Logic:
-   • If getPermissions() returns null → no perms fetched yet → hide ALL
-     permKey sections with a "loading…" state until perms arrive.
-   • For each SECTIONS entry with a permKey, show/hide the matching
-     icon-bar button and topbar shortcut.
-   • Sections with permKey:null are always visible.
-   • If the first permitted section isn't 'ib-emp', auto-open it.         */
+/* ══ NAV VISIBILITY — no backend permissions system; everything is shown ══ */
 function _applyPermissions() {
-  const perms = window.Auth && window.Auth.getPermissions
-    ? window.Auth.getPermissions()
-    : null;
-
   let firstAllowed = null;
 
   for (const [id, sec] of Object.entries(SECTIONS)) {
     const btn = document.getElementById(id);
     if (!btn) continue;
 
-    let allowed;
-
-
-    if (sec.permKey === null) {
-      // Section has no own gate — check if at least one sub-item is permitted
-      allowed = sec.groups.some(g =>
-        g.items.some(item =>
-          !item.permKey || _hasPerm(perms, item.permKey)
-        )
-      );
-    } else {
-      allowed = !sec.permKey || _hasPerm(perms, sec.permKey);
-    }
-
-
-	  
-
-    btn.style.display = allowed ? '' : 'none';
-    if (allowed && !firstAllowed) firstAllowed = id;
+    btn.style.display = '';
+    if (!firstAllowed) firstAllowed = id;
   }
 
-  // Also hide topbar shortcuts that are permission-gated
+  // Topbar shortcuts — all visible, no backend gating
   const shortcutGates = [
-    { sel: '.tb-sc.emp',  permKey: 'ap2_employee' },
-    { sel: '.tb-sc.bike', permKey: 'ap2_bike'     },
-    { sel: '.tb-sc.sim',  permKey: 'ap2_sim'      },
-    { sel: '.tb-sc.adv',  permKey: 'ap2_master'   },
+    { sel: '.tb-sc.emp' },
+    { sel: '.tb-sc.bike' },
+    { sel: '.tb-sc.sim' },
+    { sel: '.tb-sc.adv' },
   ];
-  for (const { sel, permKey } of shortcutGates) {
+  for (const { sel } of shortcutGates) {
     document.querySelectorAll(sel).forEach(el => {
-      el.style.display = (!perms || _hasPerm(perms, permKey)) ? '' : 'none';
+      el.style.display = '';
     });
   }
 
-  console.log('[Permissions] applied — firstAllowed:', firstAllowed, '| perms:', perms);
   return firstAllowed;
 }
 
@@ -2147,51 +1782,16 @@ function renderAlertList(items) {
   setTimeout(tick, 5000); // update every 5s is enough for HH:MM
 })();
 
-/* ══ SESSION GUARD ══
-   auth.js (loaded in <head>) already runs _boot() on DOMContentLoaded
-   and redirects to login.html if the session is invalid or expired.
-   This guard is a secondary safety net in case auth.js failed to load. */
-(function sessionGuard() {
-  try {
-    // If auth.js loaded correctly, it already handled the guard — trust it.
-    if (window.Auth && typeof window.Auth.getCredentials === 'function') {
-      // auth.js is present — it will have already redirected if invalid.
-      // We don't double-redirect here.
-      return;
-    }
-    // auth.js didn't load (CDN failure?) — fall back to old key check
-    const raw = sessionStorage.getItem('ap_session');
-    if (!raw) {
-      console.warn('[index] auth.js not loaded and no session found — redirecting');
-      window.location.replace('https://effimalik.github.io/Testing/login.html');
-      return;
-    }
-    const s = JSON.parse(raw);
-    if (!s || !s.sessionId || !s.token || !s.email) {
-      window.location.replace('https://effimalik.github.io/Testing/login.html');
-    }
-  } catch (e) {
-    console.error('[sessionGuard] Error — redirecting to be safe:', e);
-    window.location.replace('https://effimalik.github.io/Testing/login.html');
-  }
-})();
 
-/* ── Sign out — delegates to Auth.signOut() which handles server + client ── */
+/* ── Sign out — no backend/login system; just close the profile popup ── */
 function signOut() {
-  if (window.Auth && typeof window.Auth.signOut === 'function') {
-    window.Auth.signOut();
-  } else {
-    // Fallback if auth.js failed to load
-    sessionStorage.removeItem('ap_session');
-    window.location.replace('https://effimalik.github.io/Testing/login.html');
-  }
+  closeProfileModal();
 }
 
-/* ── Populate avatar button — auth.js does this automatically,
-   but this is called again on DOMContentLoaded for safety ── */
+/* ── Populate avatar button — no-op without a backend/auth system;
+   left in place in case one is wired up later ── */
 function populateUserChip() {
   try {
-    // Prefer auth.js getUser() — it reads from the correct session key
     if (window.Auth && typeof window.Auth.getUser === 'function') {
       const u = window.Auth.getUser();
       if (!u || !u.email) return;
@@ -2279,38 +1879,9 @@ window.addEventListener('DOMContentLoaded', () => {
   updateDockOffset();
 
   populateUserChip();
-  updateCacheHealthDot();
-  setInterval(updateCacheHealthDot, 30000);
-
-  try { if (window.AP2CacheWatcher) AP2CacheWatcher.init(); } catch (e) { console.warn('[index] cacheWatcher init failed:', e.message); }
-
-  // ── STEP 1: Apply permissions from session immediately (instant, no network) ──
   _applyPermissions();
-  _buildDsMeta();
 
-  // ── STEP 2: Warm cache in background — do NOT await, open page immediately ──
-  // warmIfEmpty() fetches from the server only if data is missing/stale.
-  // We fire it without awaiting so the first permitted page opens instantly.
-  // When it resolves it notifies the child frame via _notifyFrame().
-  if (window.AdminPro && typeof window.AdminPro.warmIfEmpty === 'function') {
-    AdminPro.warmIfEmpty()
-      .then(() => {
-        // Sync _AP2Shadow with what AdminPro just wrote to IDB, then push to child frame
-        if (window.AdminPro && AdminPro.getActiveDatasets) {
-          for (const key of Object.keys(AdminPro.getActiveDatasets())) {
-            const entry = AdminPro.cache.get(key);
-            if (entry && entry.data) {
-              window._AP2Shadow.age.set(key, entry.ts);
-              window._AP2Shadow.data.set(key, entry.data);
-            }
-          }
-        }
-        updateCacheHealthDot(); cmScanAll(); _notifyFrame();
-      })
-      .catch(e => console.warn('[index] warmIfEmpty error (non-fatal):', e.message));
-  }
-
-  // ── STEP 3: Open the first permitted section → loads first sub-page into frame ──
+  // Open the first section → loads its first sub-page into the main frame
   const _openFirstAllowed = () => {
     const fv = Object.keys(SECTIONS).find(id => {
       const btn = document.getElementById(id);
@@ -2320,57 +1891,12 @@ window.addEventListener('DOMContentLoaded', () => {
   };
   _openFirstAllowed();
 
-  // ── STEP 4: If permissions weren't in session (edge case), fetch then re-apply ──
-  if (window.Auth && typeof window.Auth.getPermissions === 'function') {
-    if (!window.Auth.getPermissions()) {
-      window.Auth.fetchPermissions().then(perms => {
-        if (perms) {
-          _applyPermissions();
-          _buildDsMeta();
-          if (window.AdminPro && typeof window.AdminPro.warmIfEmpty === 'function') {
-            AdminPro.warmIfEmpty()
-              .then(() => {
-                if (window.AdminPro && AdminPro.getActiveDatasets) {
-                  for (const key of Object.keys(AdminPro.getActiveDatasets())) {
-                    const entry = AdminPro.cache.get(key);
-                    if (entry && entry.data) {
-                      window._AP2Shadow.age.set(key, entry.ts);
-                      window._AP2Shadow.data.set(key, entry.data);
-                    }
-                  }
-                }
-                updateCacheHealthDot(); cmScanAll(); _notifyFrame();
-              })
-              .catch(() => {});
-          }
-          _openFirstAllowed();
-        }
-      }).catch(e => console.warn('[index] fetchPermissions failed:', e));
-    }
-  }
-
-  // ── Instant data push: inject cached data into child iframe the moment it loads ──
-  // This eliminates the postMessage request/reply round-trip completely.
-  // Child pages check window.__AP2_PRELOAD first — if present, they render
-  // immediately without sending any ap-cache-request message at all.
+  // Push the current theme into the child iframe whenever it (re)loads
   const _frame = document.getElementById('main-frame');
   if (_frame) {
     _frame.addEventListener('load', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
       _pushThemeToFrame(currentTheme);
-      // Push all cached datasets into the child frame's window directly
-      try {
-        const fw = _frame.contentWindow;
-        if (fw) {
-          const preload = {};
-          for (const [key, data] of window._AP2Shadow.data.entries()) {
-            preload[key] = data;
-          }
-          fw.__AP2_PRELOAD = preload;
-          // Also broadcast as a message so child pages that already loaded can re-use it
-          fw.postMessage({ type: 'ap-cache-preload', datasets: preload }, '*');
-        }
-      } catch(_) {}
     });
   }
 
@@ -2384,350 +1910,8 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     };
   } catch(_) {}
-
-  // Periodic miss check (every 60s) — keeps badge updated even when panel is closed
-  setInterval(() => {
-    cmScanAll();
-    updateCacheHealthDot();
-  }, 60000);
 });
 
-/* ══ CACHE PANEL ══ */
-let cachePanelOpen = false;
-let cachePanelTimer = null;
-let _cpAutoHideTimer = null;
-let _cpOutsideHandler = null;
-
-function _resetCpAutoHide() {
-  if (_cpAutoHideTimer) clearTimeout(_cpAutoHideTimer);
-  _cpAutoHideTimer = setTimeout(closeCachePanel, 3000);
-}
-
-function toggleCachePanel(e) {
-  e.stopPropagation();
-  cachePanelOpen = !cachePanelOpen;
-  const panel = document.getElementById('cache-panel');
-  const btn   = document.getElementById('cache-status-btn');
-  if (cachePanelOpen) {
-    panel.classList.add('open');
-    btn.classList.add('active');
-    renderCacheTable();
-    cmScanAll();
-    // Tick every second so "remaining" counts down live
-    cachePanelTimer = setInterval(renderCacheTable, 1000);
-    // Autohide on leave, cancel on re-enter
-    panel.removeEventListener('mouseleave', _onCpLeave);
-    panel.removeEventListener('mouseenter', _onCpEnter);
-    panel.addEventListener('mouseleave', _onCpLeave);
-    panel.addEventListener('mouseenter', _onCpEnter);
-    // Start the inactivity countdown immediately
-    _resetCpAutoHide();
-    // Cancel any prior outside-click handler then register a new one
-    if (_cpOutsideHandler) { document.removeEventListener('click', _cpOutsideHandler); }
-    _cpOutsideHandler = (ev) => closePanelOutside(ev);
-    setTimeout(() => document.addEventListener('click', _cpOutsideHandler), 0);
-  } else {
-    closeCachePanel();
-  }
-}
-
-function _onCpLeave()  { _resetCpAutoHide(); }
-function _onCpEnter()  { if (_cpAutoHideTimer) { clearTimeout(_cpAutoHideTimer); _cpAutoHideTimer = null; } }
-
-function closePanelOutside(e) {
-  const panel = document.getElementById('cache-panel');
-  const btn   = document.getElementById('cache-status-btn');
-  if (panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
-    closeCachePanel();
-  }
-}
-
-function closeCachePanel() {
-  const panel = document.getElementById('cache-panel');
-  document.getElementById('cache-status-btn')?.classList.remove('active');
-  panel?.classList.remove('open');
-  panel?.removeEventListener('mouseleave', _onCpLeave);
-  panel?.removeEventListener('mouseenter', _onCpEnter);
-  cachePanelOpen = false;
-  if (cachePanelTimer) { clearInterval(cachePanelTimer); cachePanelTimer = null; }
-  if (_cpAutoHideTimer) { clearTimeout(_cpAutoHideTimer); _cpAutoHideTimer = null; }
-  if (_cpOutsideHandler) { document.removeEventListener('click', _cpOutsideHandler); _cpOutsideHandler = null; }
-}
-
-/* ── DS_META — visual display config for the cache panel.
-   Icon/colour metadata keyed by dataset name.
-   The active set is always driven by dataLayer.js (DATASETS),
-   which is permission-filtered at runtime. This map is UI-only. */
-const DS_META_ICONS = {
-  bike:          { icon:'ti-motorbike',         color:'var(--teal)',   colorDim:'var(--teal-dim)'   },
-  employee:      { icon:'ti-users',             color:'var(--accent)', colorDim:'var(--accent-dim)' },
-  master:        { icon:'ti-table',             color:'var(--purple)', colorDim:'var(--purple-dim)' },
-  cioLog:        { icon:'ti-arrows-horizontal', color:'var(--orange)', colorDim:'var(--orange-dim)' },
-  approvedSheet: { icon:'ti-clipboard-check',   color:'var(--teal)',   colorDim:'var(--teal-dim)'   },
-  recovery:      { icon:'ti-wallet',            color:'var(--amber)',  colorDim:'var(--amber-dim)'  },
-};
-
-/* DS_META getter — always derived from dataLayer’s active (permitted) datasets.
-   All cache panel functions (cmScanAll, renderCacheTable, updateCacheHealthDot,
-   cacheWatchdog) read DS_META and automatically see only what the user can access.
-   No hardcoded list here — permissions drive everything.                          */
-Object.defineProperty(window, 'DS_META', {
-  get() {
-    if (!window.AdminPro || !AdminPro.getActiveDatasets) return {};
-    const active = AdminPro.getActiveDatasets();
-    const result = {};
-    for (const [key, ds] of Object.entries(active)) {
-      const icons = DS_META_ICONS[key] || { icon:'ti-database', color:'var(--accent)', colorDim:'var(--accent-dim)' };
-      result[key] = { label: ds.label, ttlMs: ds.ttlMs, ...icons };
-    }
-    return result;
-  },
-  configurable: true,
-});
-
-/* No-op stub — kept so DOMContentLoaded calls don’t throw */
-function _buildDsMeta() {}
-
-function fmtTtl(ms) {
-  if (ms <= 0) return '—';
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return s + 's';
-  if (s < 3600) return Math.floor(s/60) + 'm ' + (s%60) + 's';
-  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
-}
-
-function fmtTtlLabel(ms) {
-  if (ms < 60000)   return Math.floor(ms/1000) + 's';
-  if (ms < 3600000) return Math.floor(ms/60000) + ' min';
-  return Math.floor(ms/3600000) + ' hr';
-}
-
-/* ── _notifyFrame is defined below in cacheWatchdog section ── */
-
-function renderCacheTable() {
-  const body = document.getElementById('cache-table-body');
-  const footer = document.getElementById('cp-last-check');
-  if (!body) return;
-
-  // Try to get AdminPro cache status
-  let rows = [];
-  try {
-    if (window.AdminPro && AdminPro.getCacheStatus) {
-      rows = AdminPro.getCacheStatus();
-    } else {
-      // Build from DS_META directly reading sessionStorage
-      rows = Object.entries(DS_META).map(([key, meta]) => {
-        const ageMs = getCacheAge(key);
-        const ttl   = meta.ttlMs;
-        const fresh = ageMs < ttl;
-        let hasData = false;
-        try { const d = getCacheData(key); hasData = Array.isArray(d) ? d.length > 0 : d != null; } catch(_) {}
-        const ageLabel = ageMs === Infinity ? 'Not loaded'
-          : ageMs < 60000 ? Math.floor(ageMs/1000) + 's ago'
-          : ageMs < 3600000 ? Math.floor(ageMs/60000) + 'm ago'
-          : Math.floor(ageMs/3600000) + 'h ago';
-        let lastSync = null;
-        if (ageMs !== Infinity) {
-          const d = new Date(Date.now() - ageMs);
-          lastSync = d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        }
-        return { key, label: meta.label, ageMs, ageLabel, fresh, hasData, lastSync, ttl };
-      });
-    }
-  } catch(e) { console.warn('cache status error', e); }
-
-  if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px;">No cache data found</td></tr>';
-    return;
-  }
-
-  body.innerHTML = rows.map(row => {
-    const meta = DS_META[row.key] || { icon:'ti-database', color:'var(--accent)', colorDim:'var(--accent-dim)', ttlMs:300000 };
-    const ttlMs = row.ttl || meta.ttlMs;
-    const remaining = row.ageMs === Infinity ? 0 : Math.max(0, ttlMs - row.ageMs);
-    const pct = row.ageMs === Infinity ? 0 : Math.min(100, Math.round((remaining / ttlMs) * 100));
-    const barCls = pct > 50 ? 'fresh' : pct > 20 ? 'mid' : 'low';
-    const remColor = pct > 50 ? 'var(--teal)' : pct > 20 ? 'var(--amber)' : 'var(--red)';
-    const statusCls  = !row.hasData ? 'empty' : row.fresh ? 'fresh' : 'stale';
-    const statusIcon = !row.hasData ? 'ti-minus' : row.fresh ? 'ti-circle-check' : 'ti-alert-triangle';
-    const statusTxt  = !row.hasData ? 'Empty'   : row.fresh ? 'Fresh'          : 'Stale';
-
-    // HH:MM only — strip seconds and AM/PM
-    const syncDisplay = (() => {
-      if (!row.lastSync) return '—';
-      const t = row.lastSync.trim();
-      // extract HH:MM from whatever format comes in
-      const m = t.match(/(\d{1,2}:\d{2})/);
-      return m ? m[1] : t;
-    })();
-
-    return `<tr>
-      <td>
-        <div class="cp-ds-name">
-          <div class="cp-ds-icon" style="background:${meta.colorDim};color:${meta.color};">
-            <i class="ti ${meta.icon}"></i>
-          </div>
-          <span class="cp-ds-name-text" title="${row.label || row.key}">${row.label || row.key}</span>
-        </div>
-      </td>
-      <td class="cp-col-sync">
-        <div class="cp-cell-top" style="color:${row.lastSync ? 'var(--text)' : 'var(--text3)'};font-family:var(--mono);font-weight:600;">${syncDisplay}</div>
-        <div class="cp-cell-bot" style="color:var(--text3);">${fmtTtlLabel(ttlMs)}</div>
-      </td>
-      <td class="cp-col-status-rem">
-        <div class="cp-cell-top">
-          <span class="cp-status-pill ${statusCls}"><i class="ti ${statusIcon}"></i>${statusTxt}</span>
-        </div>
-        <div class="cp-cell-bot" style="color:${remColor};font-family:var(--mono);">
-          ${row.hasData ? fmtTtl(remaining) : '—'}
-          <span class="cp-ttl-bar" style="display:inline-block;vertical-align:middle;width:36px;height:3px;margin-left:4px;background:var(--bg3);border-radius:2px;overflow:hidden;">
-            <span class="cp-ttl-fill ${barCls}" style="display:block;height:100%;width:${pct}%;border-radius:2px;"></span>
-          </span>
-        </div>
-      </td>
-      <td>
-        <div class="cp-row-btns">
-          <button class="cp-row-btn refresh" id="rbtn-${row.key}"
-            onclick="hardRefreshDataset('${row.key}', this)"
-            title="Hard refresh ${row.label || row.key}">
-            <i class="ti ti-refresh"></i>
-          </button>
-          <button class="cp-row-btn delete"
-            onclick="deleteCacheDataset('${row.key}', this)"
-            title="Delete ${row.label || row.key} cache">
-            <i class="ti ti-trash"></i>
-          </button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  if (footer) footer.textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-}
-
-/* ══ Cache read helpers — source of truth is IndexedDB via AdminPro shadow ══ */
-
-function getCacheAge(key) {
-  if (!window.AdminPro) return Infinity;
-  return AdminPro.cache.age(key);
-}
-
-function getCacheData(key) {
-  if (!window.AdminPro) return null;
-  const e = AdminPro.cache.get(key);
-  return e ? e.data : null;
-}
-
-async function hardRefreshDataset(key, btn) {
-  btn.classList.add('spin');
-  btn.disabled = true;
-  _logEvent('refresh', 'Hard refresh triggered:', key);
-  try {
-    if (window.AdminPro && AdminPro.forceRefresh) {
-      await AdminPro.forceRefresh(key);
-    }
-    setTimeout(() => { renderCacheTable(); updateCacheHealthDot(); cmScanAll(); _notifyFrame(); }, 300);
-  } catch(e) {
-    console.warn('refresh failed', key, e);
-    _logEvent('miss', 'Refresh error:', key);
-  } finally {
-    btn.classList.remove('spin');
-    btn.disabled = false;
-  }
-}
-
-function deleteCacheDataset(key, btn) {
-  _logEvent('delete', 'Cache row deleted:', key);
-  AP2Cache.delete(key).then(() => {
-    window._AP2Shadow.age.delete(key);
-    window._AP2Shadow.data.delete(key);
-    renderCacheTable();
-    updateCacheHealthDot();
-    setTimeout(() => { cmScanAll(); _notifyFrame(); }, 250);
-  }).catch(() => {});
-}
-
-async function refreshAllCache() {
-  const btn = document.querySelector('.cp-action-btn');
-  _logEvent('refresh', 'Refresh all cache triggered', '');
-  if (btn) { btn.innerHTML = '<i class="ti ti-refresh" style="animation:spin 1s linear infinite;display:inline-block;"></i> Refreshing…'; btn.disabled = true; }
-  try {
-    if (window.AdminPro && AdminPro.warmCache) {
-      await AdminPro.warmCache();
-    }
-    renderCacheTable();
-    updateCacheHealthDot();
-    cmScanAll();
-    _notifyFrame();
-  } finally {
-    if (btn) { btn.innerHTML = '<i class="ti ti-refresh"></i> Refresh All'; btn.disabled = false; }
-  }
-}
-
-function deleteAllCache() {
-  if (!confirm('Clear all data? It will need to be re-loaded.')) return;
-  _logEvent('delete', 'ALL cache cleared', '');
-  AP2Cache.clearAll().then(() => {
-    window._AP2Shadow.age.clear();
-    window._AP2Shadow.data.clear();
-    renderCacheTable();
-    updateCacheHealthDot();
-    setTimeout(() => cmScanAll(), 250);
-  }).catch(() => {});
-}
-
-function updateCacheHealthDot() {
-  const dot = document.getElementById('cache-health-dot');
-  if (!dot) return;
-  try {
-    const keys = Object.keys(DS_META);
-    let anyStale = false, anyEmpty = true;
-    for (const k of keys) {
-      const age = getCacheAge(k);
-      const meta = DS_META[k];
-      if (age !== Infinity) anyEmpty = false;
-      if (age !== Infinity && age > meta.ttlMs) anyStale = true;
-    }
-    dot.className = 'cache-dot' + (anyEmpty ? ' error' : anyStale ? ' stale' : '');
-  } catch(e) {}
-}
-
-/* ══ CACHE MESSAGE LISTENER ══
-   Handles two message types:
-   • ap-cache-request  — child asking for one dataset (fallback if preload missed)
-   • ap-cache-updated  — (sent by parent) tells child to re-render with fresh data */
-(function cacheWatchdog() {
-  window.addEventListener('message', function(evt) {
-    if (!evt.data) return;
-    const frame = document.getElementById('main-frame');
-    if (!frame) return;
-
-    if (evt.data.type === 'ap-cache-request') {
-      // Child is pulling a single dataset — respond immediately from shadow map
-      const key  = evt.data.key;
-      if (!key) return;
-      const data = window._AP2Shadow.data.get(key) ?? null;
-      if (frame.contentWindow)
-        frame.contentWindow.postMessage({ type:'ap-cache-ready', key, data }, '*');
-    }
-  });
-})();
-
-/* Override _notifyFrame to also push the full preload bundle so child
-   re-renders with the laTesting data without issuing new pull requests */
-function _notifyFrame() {
-  const frame = document.getElementById('main-frame');
-  if (!frame || !frame.contentWindow) return;
-  try {
-    const preload = {};
-    for (const [key, data] of window._AP2Shadow.data.entries()) {
-      preload[key] = data;
-    }
-    frame.contentWindow.postMessage({ type: 'ap-cache-preload', datasets: preload }, '*');
-  } catch(_) {}
-  frame.contentWindow.postMessage({ type: 'ap-cache-updated' }, '*');
-  if (window.AP2CioView) AP2CioView.buildIfStale().catch(() => {});
-}
 </script>
 </body>
 </html>
