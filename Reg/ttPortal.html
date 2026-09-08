@@ -10,22 +10,7 @@
 
 <style>
 /* ═══ THEME (unchanged — matches rest of AP2 Fleet) ═══ */
-:root,[data-theme="dark"]{
-  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;
-  --surface:#21262d;--surface2:#2d333b;
-  --border:#30363d;--border2:#444c56;
-  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
-  --accent:#58a6ff;--accent-dim:rgba(88,166,255,.12);--accent-glow:rgba(88,166,255,.28);
-  --teal:#39d353;--teal-dim:rgba(57,211,83,.12);
-  --amber:#e3b341;--amber-dim:rgba(227,179,65,.12);
-  --red:#f85149;--red-dim:rgba(248,81,73,.12);
-  --purple:#a371f7;--purple-dim:rgba(163,113,247,.12);
-  --orange:#f0883e;--orange-dim:rgba(240,136,62,.12);
-  --radius:8px;--radius-lg:12px;--radius-xl:16px;
-  --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
-  --shadow:0 1px 3px rgba(0,0,0,.4);--shadow-md:0 4px 16px rgba(0,0,0,.5);--shadow-lg:0 8px 32px rgba(0,0,0,.6);
-}
-[data-theme="light"]{
+:root,[data-theme="light"]{
   --bg:#eceae4;--bg2:#ffffff;--bg3:#f4f2ec;
   --surface:#ffffff;--surface2:#ece9e0;
   --border:#dedad0;--border2:#c9c4b6;
@@ -36,7 +21,22 @@
   --red:#d1342f;--red-dim:rgba(209,52,47,.10);
   --purple:#7a4fd6;--purple-dim:rgba(122,79,214,.10);
   --orange:#f5811f;--orange-dim:rgba(245,129,31,.12);
+  --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
   --shadow:0 1px 3px rgba(20,18,10,.08);--shadow-md:0 8px 24px rgba(20,18,10,.10);--shadow-lg:0 18px 48px rgba(20,18,10,.20);
+}
+[data-theme="dark"]{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;
+  --surface:#21262d;--surface2:#2d333b;
+  --border:#30363d;--border2:#444c56;
+  --text:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  --accent:#58a6ff;--accent-dim:rgba(88,166,255,.12);--accent-glow:rgba(88,166,255,.28);
+  --teal:#39d353;--teal-dim:rgba(57,211,83,.12);
+  --amber:#e3b341;--amber-dim:rgba(227,179,65,.12);
+  --red:#f85149;--red-dim:rgba(248,81,73,.12);
+  --purple:#a371f7;--purple-dim:rgba(163,113,247,.12);
+  --orange:#f0883e;--orange-dim:rgba(240,136,62,.12);
+  --shadow:0 1px 3px rgba(0,0,0,.4);--shadow-md:0 4px 16px rgba(0,0,0,.5);--shadow-lg:0 8px 32px rgba(0,0,0,.6);
 }
 [data-theme="purple"]{
   --bg:#0f0b1e;--bg2:#17112e;--bg3:#1e1840;
@@ -112,6 +112,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .btn-icon{width:32px;height:32px;border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0;}
 .btn-icon:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
 .btn-icon.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+
+.btn-circle{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s;flex-shrink:0;}
+.btn-circle i{font-size:16px;}
+.btn-circle:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.btn-circle.primary{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 10px var(--accent-glow);}
+.btn-circle.primary:hover{filter:brightness(1.1);}
+.btn-circle:disabled{opacity:.5;cursor:not-allowed;pointer-events:none;}
 .date-filter-select{padding:6px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;max-width:180px;}
 .date-filter-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim);}
 .search-wrap{position:relative;display:flex;align-items:center;}
@@ -288,8 +295,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         </div>
       </div>
 
-      <button class="btn btn-ghost btn-sm" id="btn-download-edd" style="display:none;" onclick="openEDDPreview(selectedKey)" title="Generate an EDD form for the selected transaction"><i class="ti ti-file-download"></i> Download EDD Form</button>
-      <button class="btn btn-primary btn-sm" id="btn-upload-selected" style="display:none;" onclick="openUploadFlow(selectedKey)"><i class="ti ti-upload"></i> Upload Document</button>
+      <button class="btn-circle" id="btn-download-edd" style="display:none;" onclick="openEDDPreview(selectedKey)" title="Download EDD Form"><i class="ti ti-download"></i></button>
+      <button class="btn-circle primary" id="btn-upload-selected" style="display:none;" onclick="openUploadFlow(selectedKey)" title="Upload Document"><i class="ti ti-upload"></i></button>
     </div>
   </div>
 
@@ -808,9 +815,8 @@ window.addEventListener('message', (e) => {
   if (e.data.type === 'ap-cache-updated'){
     try { window.parent.postMessage({ type: 'ap-cache-request', key: e.data.key }, '*'); } catch(err){}
   }
-  if (e.data.type === 'ap-theme' && e.data.theme) {
-    document.documentElement.setAttribute('data-theme', e.data.theme);
-  }
+  // NOTE: intentionally NOT listening for 'ap-theme' — this portal always
+  // uses its own fixed creamy theme and ignores the host app's theme.
 });
 
 [_AP2_CACHE_KEY_EMP, _AP2_CACHE_KEY_BIKE].forEach(key => {
@@ -1232,7 +1238,7 @@ function openEDDPreview(key){
 
   _eddFormHtml = buildEDDFormHtml(t);
 
-  openPanel('ti-file-download','EDD Form Preview', true);
+  openPanel('ti-download','EDD Form Preview', true);
   clearHeadMeta();
 
   const body = document.getElementById('dp-body');
