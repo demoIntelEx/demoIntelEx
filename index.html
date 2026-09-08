@@ -1802,9 +1802,9 @@ function populateProfileModal() {
   try {
     const u = (window.Auth && typeof window.Auth.getUser === 'function') ? window.Auth.getUser() : null;
 
-    const email = (u && u.email) || 'sas.ds.llc@gmail.com';
+    const email = (u && u.email) || 'any@lariexchange.com';
     const name  = (u && u.name)  || 'Afan Haidar';
-    const rawRole = (u && u.role) || 'Head Operations|Talabat';
+    const rawRole = (u && u.role) || 'Customer Services|Lari Exchange';
     const status  = ((u && u.status) || 'active').toLowerCase();
 
     const parts = rawRole.split('|').map(s => (s || '').trim()).filter(Boolean);
