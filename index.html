@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FleetFlow Pro — HR &amp; Fleet Management</title>
+<title>IntellEx</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%232554C7'/%3E%3Cstop offset='100%25' stop-color='%2312223f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath d='M14 40 L28 26 L38 34 L50 20' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='20' r='4' fill='white'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -1030,20 +1030,13 @@
       <!-- Shortcuts — always visible, scrollable -->
       <div class="tb-shortcuts">
         <button class="tb-sc emp"
-          onclick="loadPage('Reg/addEmp.html',null,'Add Employee','ti-user-plus','Register new employee','var(--accent-dim)','var(--accent)')">
-          <i class="ti ti-user-plus"></i><span> Add Employee</span>
+          onclick="loadPage('Reg/remittance.html',null,'Payment Panel','ti-user-plus','Payment in remittance','var(--accent-dim)','var(--accent)')">
+          <i class="ti ti-user-plus"></i><span>Remittance</span>
         </button>
-        <button class="tb-sc bike"
-          onclick="loadPage('Reg/addBike.html',null,'Add Bike','ti-motorbike','Register vehicle','var(--teal-dim)','var(--teal)')">
-          <i class="ti ti-motorbike"></i><span> Add Bike</span>
-        </button>
-        <button class="tb-sc sim"
-          onclick="loadPage('Reg/addSim.html',null,'Add Sim','ti-device-sim','New sim','var(--purple-dim)','var(--purple)')">
-          <i class="ti ti-device-sim"></i><span> Add Sim</span>
         </button>
         <button class="tb-sc doc"
-          onclick="loadPage('Reg/docPortal.html',null,'Add Documents','ti-file-plus','Upload new document','var(--red-dim)','var(--red)')">
-          <i class="ti ti-file-plus"></i><span> Add Doc</span>
+          onclick="loadPage('Reg/ttPortal.html',null,'Daily Transactions','ti-file-plus','Transaction History','var(--red-dim)','var(--red)')">
+          <i class="ti ti-file-plus"></i><span>Daily Transactions</span>
         </button>
       </div>
 
@@ -1236,9 +1229,6 @@ const SECTIONS = {
         { label:'Remittance',        file:'Reg/remittance.html', icon:'ti-list',      sub:'Remittance'     },
         { label:'Daily Transaction', file:'Reg/ttPortal.html', icon:'ti-user-plus', sub:'Daily Transactions' },
       ]},
-      { label:'Documents', items:[
-        { label:'Integrations', file:'Reg/empExp.html', icon:'ti-file-x', sub:'Visa · EID · Labour', badge:true },
-      ]},
     ],
   },
   'ib-bike': {
@@ -1248,10 +1238,6 @@ const SECTIONS = {
     permKey: 'ap2_bike',
     groups:[
       { label:'Fleet', items:[
-
-      ]},
-      { label:'Documents', items:[
-        { label:'Expiring Docs', file:'Reg/bikExp.html', icon:'ti-file-x', sub:'Mulkiya · Insurance', badge:true },
       ]},
     ],
   },	
@@ -1262,11 +1248,8 @@ const SECTIONS = {
   permKey: 'ap2_sim',
   groups:[
     { label:'SIM', items:[
+    ]},
 
-    ]},
-    { label:'Documents', items:[
-      { label:'Expiring SIMs', file:'Reg/simExp.html',  icon:'ti-file-x', sub:'Expiring contracts', badge:true },
-    ]},
   ],
 },
 	
@@ -1291,7 +1274,6 @@ const SECTIONS = {
     permKey: 'ap2_docLog',   // section always shown if at least one child item is permitted
     groups:[
       { label:'Directory', items:[
-        { label:'Add Documents', file:'Reg/docPortal.html', icon:'ti-file-plus', sub:'Upload new document' },
       ]},
       { label:'Doc Portal', items:[
       ]},
@@ -1305,12 +1287,7 @@ const SECTIONS = {
     permKey: 'ap2_dedLog',
     groups:[
       { label:'Payroll', items:[
-        { label:'Salik',       file:'Reg/ttPortal.html',    icon:'ti-road',       sub:'Toll charges'        },
-        { label:'Bike Fine',   file:'Reg/accLog.html', icon:'ti-ticket',     sub:'Traffic fines'       },
-		{ label:'Salik Reconciliation', file:'Reg/salik.html', icon:'ti-users',     sub:'Visa · EID · Labour', badge:true, permKey:'ap2_employee' },
 
-        { label:'Deductions',  file:'Reg/dedEngine.html', icon:'ti-wallet-off', sub:'Salary deductions'  },
-		{ label:'Deduction Report',  file:'Reg/dedPivot.html', icon:'ti-device-sim', sub:'Deduction Pivot Report', badge:true, permKey:'ap2_loginData'  },
       ]},
     ],
   },
@@ -1322,8 +1299,6 @@ const SECTIONS = {
     permKey: 'ap2_loginData',
     groups:[
       { label:'Admin', items:[
-        { label:'User Management', file:'Reg/userPortal.html', icon:'ti-user-cog', sub:'Manage user access' },
-        { label:'Audit Logs',      file:'Reg/upLog.html', icon:'ti-history',  sub:'System activity log' },
       ]},
     ],
   },
