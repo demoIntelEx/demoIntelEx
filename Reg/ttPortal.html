@@ -170,27 +170,39 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .dp-panel{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:94vw;background:var(--surface);border-left:1px solid var(--border);box-shadow:var(--shadow-lg);z-index:300;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1),width .22s ease;}
 .dp-panel.dp-panel-wide{width:min(62vw,980px);}
 .dp-panel.open{transform:translateX(0);}
-.dp-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0;}
-.dp-head h3{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:7px;}
+.dp-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-wrap:wrap;row-gap:8px;flex-shrink:0;}
+.dp-head h3{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:7px;flex-shrink:0;}
 .dp-head h3 i{color:var(--accent);font-size:17px;}
 .dp-close{margin-left:auto;width:28px;height:28px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0;}
 .dp-close:hover{background:var(--red-dim);color:var(--red);border-color:var(--red);}
 .dp-body{flex:1;overflow-y:auto;padding:16px;}
 
-/* Meta strip attached under dp-head — inline row on desktop,
-   collapsible dropdown on small screens. */
-#dp-head-meta:empty{display:none;}
-.dp-meta-drop{border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0;}
-.dp-meta-summary{display:none;align-items:center;gap:6px;cursor:pointer;padding:9px 16px;font-size:10.5px;font-weight:700;color:var(--text2);list-style:none;user-select:none;}
-.dp-meta-summary::-webkit-details-marker{display:none;}
-.dp-meta-summary i.ti-chevron-down{margin-left:auto;transition:transform .18s;font-size:13px;}
-.dp-meta-drop[open] .dp-meta-summary i.ti-chevron-down{transform:rotate(180deg);}
-.dp-meta-drop .preview-meta{margin:0;border:none;border-radius:0;background:transparent;padding:10px 16px;}
+/* Doc-type pills, now live in the header row itself (next to the title) */
+.dp-head-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 180px;}
+.dp-head-tabs:empty{display:none;}
+
+/* RED BOX in the mock — per-ENTITY "Transaction" chip: when this KYC
+   / transaction case was opened, by whom, and at which branch. Derived
+   from the earliest attachment on file for the entity (see t.txnMeta
+   in buildTransactions()) — it does NOT change when you switch the
+   doc-type tab below, because it describes the case, not one file. */
+.dp-head-txn{display:flex;flex-direction:column;gap:2px;padding:6px 11px;border:1.5px solid var(--red);background:var(--red-dim);border-radius:var(--radius);min-width:180px;flex-shrink:0;}
+.dp-head-txn:empty{display:none;}
+.dp-head-txn .txn-lbl{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--red);display:flex;align-items:center;gap:4px;}
+.dp-head-txn .txn-ln{font-size:10.5px;color:var(--text);line-height:1.4;}
+.dp-head-txn .txn-ln.mono{font-family:var(--mono);color:var(--text2);}
+
+/* BLACK BOX in the mock — per-ATTACHMENT strip: this file's own
+   upload date/time, who captured it, and at which branch. Updates
+   every time renderDocGallery() runs for a newly-selected tab. */
+.dp-head-attach{display:flex;flex-wrap:wrap;gap:16px 22px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;}
+.dp-head-attach:empty{display:none;padding:0;border-bottom:none;}
+.attach-item{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.attach-item .k{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:4px;}
+.attach-item .v{font-size:11.5px;font-weight:600;color:var(--text);font-family:var(--mono);}
 @media(max-width:760px){
-  .dp-meta-summary{display:flex;}
-}
-@media(min-width:761px){
-  .dp-meta-drop .preview-meta{display:flex !important;}
+  .dp-head-txn{min-width:0;font-size:10px;}
+  .dp-head-attach{gap:10px 16px;padding:9px 12px;}
 }
 
 .confirm-strip{display:flex;align-items:center;gap:8px;background:var(--accent-dim);border:1px solid rgba(88,166,255,.25);border-radius:var(--radius-lg);padding:8px 11px;margin-bottom:12px;}
@@ -277,6 +289,20 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <p class="page-desc"><i class="ti ti-info-circle"></i><span>Upload, review &amp; track KYC and transaction documents (Receipts, EDD, Source, EID, Passport, Visa) for every entity, and generate EDD forms for transactions</span></p>
     </div>
     <div class="page-header-controls">
+      <div class="tab-nav" title="View">
+        <button class="tab-btn active" id="view-cashier" onclick="setViewMode('cashier')"><i class="ti ti-user"></i> Cashier</button>
+        <button class="tab-btn" id="view-management" onclick="setViewMode('management')"><i class="ti ti-briefcase"></i> Management</button>
+      </div>
+
+      <select id="branch-filter" class="date-filter-select" title="Filter by branch" onchange="setBranchFilter(this.value)">
+        <option value="all">All Branches</option>
+      </select>
+
+      <select id="user-filter" class="date-filter-select" title="Filter by user" onchange="setUserFilter(this.value)">
+        <option value="all">All Users</option>
+      </select>
+
+
       <div class="tab-nav">
         <button class="tab-btn active" id="filter-all" title="All" onclick="setPortalFilter('all')"><i class="ti ti-stack-2"></i></button>
         <button class="tab-btn" id="filter-transaction" title="Transaction" onclick="setPortalFilter('transaction')"><i class="ti ti-receipt"></i></button>
@@ -325,8 +351,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <!-- SLIDE PANEL (View / Upload) -->
 <div class="dp-overlay" id="dp-overlay" onclick="closePanel()"></div>
 <div class="dp-panel" id="dp-panel">
-  <div class="dp-head"><h3><i class="ti ti-files" id="dp-icon"></i><span id="dp-title">Panel</span></h3><button class="dp-close" onclick="closePanel()"><i class="ti ti-x"></i></button></div>
-  <div id="dp-head-meta"></div>
+  <div class="dp-head">
+    <h3><i class="ti ti-files" id="dp-icon"></i><span id="dp-title">Panel</span></h3>
+    <div class="dp-head-tabs" id="dp-head-tabs"></div>
+    <div class="dp-head-txn" id="dp-head-txn"></div>
+    <button class="dp-close" onclick="closePanel()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="dp-head-attach" id="dp-head-attach"></div>
   <div class="dp-body" id="dp-body"></div>
 </div>
 
@@ -363,50 +394,235 @@ function docTypeLabel(portal,key){ const f=docTypeInfo(portal,key); return f?f.l
    BikeDocuments — same tabs docPortal.html already writes into). */
 
 /* ═══════════════════════════════════════════════════════
- *  HARDCODED DOC LOG DATA
- *  This is the dataset baked directly into the page — no network
- *  call, no Google Sheets round-trip needed to see the portal work.
- *  Each row matches the sheet's original column order exactly:
- *  [ Transaction ID, Portal, ID, Doc Type, Doc Link, Exp Date ]
+ *  BRANCH / STAFF REFERENCE LISTS
+ *  Used by (a) the generated demo rows below as realistic example
+ *  data, and (b) the Upload flow's "Person Name" / "Branch" fields,
+ *  so a brand-new upload captures the same two fields the viewer
+ *  displays.
  * ═══════════════════════════════════════════════════════ */
-const HARDCODED_DOC_LOG = [
-  ['1788907980','Onboarding','2','ID','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788907860','Transaction','2','Receipt','',''],
-  ['1788907920','Transaction','2','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk','1788907860'],
-  ['1788908040','Onboarding','2','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788908100','Transaction','260515265325','Receipt','',''],
-  ['1788908160','Transaction','260515265326','Receipt','',''],
-  ['1788908220','Onboarding','96211809','ID','',''],
-  ['1788908280','Onboarding','84166772','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788908340','Transaction','260515265329','Receipt','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788908400','Transaction','260515265330','Receipt','','1788907860'],
-  ['1788908460','Onboarding','30545112','ID','','1788907860'],
-  ['1788908520','Onboarding','42269976','Visa','','1788907860'],
-  ['1788908580','Transaction','260515265333','Receipt','','1788907860'],
-  ['1788908640','Transaction','260515265334','Receipt','','1788907860'],
-  ['1788908700','Onboarding','37249783','ID','','1788907860'],
-  ['1788908760','Onboarding','87387731','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788908820','Onboarding','87387731','ID','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-  ['1788908880','Onboarding','87387731','Passport','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788907860'],
-
-  /* Extra demo history — same month (September 2026), spread across
-     different days so the date filter and table have more to show. */
-  ['1788254100','Transaction','260515265340','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
-  ['1788254400','Transaction','260515265340','EDD','',''],
-  ['1788347100','Onboarding','55021837','ID','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788347100'],
-  ['1788349200','Onboarding','55021837','Passport','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788347100'],
-  ['1788445500','Transaction','260515265341','Receipt','',''],
-  ['1788447000','Transaction','260515265341','Source','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
-  ['1788511500','Onboarding','61829304','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788511500'],
-  ['1788538200','Transaction','2','EDD','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
-  ['1788604200','Onboarding','77321044','ID','',''],
-  ['1788630900','Transaction','260515265342','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
-  ['1788685200','Onboarding','87387731','ICP Status','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788685200'],
-  ['1788700800','Transaction','260515265343','Receipt','',''],
-  ['1788783300','Transaction','260515265343','Source','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
-  ['1788795600','Onboarding','30545112','Visa','https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk','1788795600'],
-  ['1788861900','Transaction','260515265344','Receipt','https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',''],
+const BRANCH_LIST = [
+  'Deira Main Branch','Downtown Dubai Branch','Business Bay Branch',
+  'Sharjah Branch','Abu Dhabi Branch',
 ];
+/* 5 cashiers per branch (25 total). Each has one fixed home branch —
+   that's what the Cashier view locks the Branch/User dropdowns to,
+   and what each of their cases/dates below is generated under. */
+const _FIRST_NAMES=['Ahmed','Fatima','Rashid','Mariam','Youssef','Layla','Omar','Noura','Khalid','Hessa','Saeed','Aisha','Hamdan','Salma','Zayed','Reem','Faisal','Alia','Marwan','Shamma','Sultan','Wadha','Juma','Latifa','Rakan'];
+const _LAST_NAMES =['Al Mansoori','Al Suwaidi','Obaid','Al Marri','Bin Rashed','Nasser','Al Ketbi','Khalid','Al Zaabi','Al Falasi','Al Neyadi','Al Shamsi','Al Qasimi','Saeed','Hamdan'];
+function _buildPersonList(){
+  const persons=[]; let n=0;
+  BRANCH_LIST.forEach(branch=>{
+    for(let i=0;i<5;i++){
+      persons.push({ name:`${_FIRST_NAMES[n%_FIRST_NAMES.length]} ${_LAST_NAMES[n%_LAST_NAMES.length]}`, branch });
+      n++;
+    }
+  });
+  return persons;
+}
+const PERSON_LIST = _buildPersonList();
+/* Flat name list — used where any of the 25 people can be picked
+   without needing their branch (e.g. an attachment captured by
+   someone other than who opened the case). */
+const PEOPLE_POOL = PERSON_LIST.map(p=>p.name);
+/* The demo's "logged in" identity — no real auth here, so the Cashier
+   view just locks to the first person on the list as a stand-in. */
+const CURRENT_USER = PERSON_LIST[0];
+
+/* Cashier view is permanently fixed to this identity — Branch and
+   User are NOT selectable in Cashier view anymore. No picker, no
+   localStorage lock-in flow, just this pairing every time. */
+const FIXED_CASHIER_IDENTITY = PERSON_LIST.find(p=>p.name==='Youssef Bin Rashed' && p.branch==='Deira Main Branch');
+
+/* ═══════════════════════════════════════════════════════
+ *  CASHIER IDENTITY LOCK
+ *  A Cashier must pick ONE Branch + one User the first time they
+ *  switch into Cashier view. That pairing is then saved (localStorage,
+ *  so it survives reloads on this device) and the Branch/User dropdowns
+ *  stay locked to it for as long as Cashier view is selected — a
+ *  cashier can't silently browse another branch/person's data.
+ *  Management view is unaffected and always stays open to "All".
+ * ═══════════════════════════════════════════════════════ */
+const CASHIER_IDENTITY_KEY = 'ttportal_cashier_identity_v1';
+function getCashierIdentity(){
+  try{
+    const raw = localStorage.getItem(CASHIER_IDENTITY_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(obj && obj.name && obj.branch && PERSON_LIST.some(p=>p.name===obj.name && p.branch===obj.branch)) return obj;
+  }catch(e){}
+  return null;
+}
+function setCashierIdentity(name,branch){
+  try{ localStorage.setItem(CASHIER_IDENTITY_KEY, JSON.stringify({name,branch})); }catch(e){}
+}
+function clearCashierIdentity(){
+  try{ localStorage.removeItem(CASHIER_IDENTITY_KEY); }catch(e){}
+}
+
+/* ═══════════════════════════════════════════════════════
+ *  HARDCODED DOC LOG DATA — GENERATED, NOT HAND-TYPED
+ *  Still fully local (no network/Sheets round-trip) but built by a
+ *  small seeded-random generator below instead of a literal list, so
+ *  it can satisfy rules that are painful to keep consistent by hand:
+ *
+ *   1. VOLUME/SHAPE — 5 branches × 5 people per branch × 5 dates per
+ *      person, and on EACH of those dates every person opens exactly
+ *      10 Transaction cases + 10 Onboarding cases (25×5×20 = 2,500
+ *      cases total, each with its own auto-incrementing entity ID).
+ *   2. TRANSACTION vs ATTACHMENT timing — every entity gets ONE
+ *      "transaction opened" timestamp (the case/record itself), on
+ *      that person's date. Every document attached to it is uploaded
+ *      the SAME calendar date, always LATER than the transaction time
+ *      by a random 5–6 hours (see _buildEntityRows). Transaction time
+ *      and attachment time are therefore never equal and never on
+ *      different dates.
+ *   3. RANDOM, MIXED DOCUMENT COUNTS — each case independently rolls
+ *      0 (nothing on file yet), 1, 2, or a fuller set of documents, so
+ *      the table shows a realistic mix of complete / partial / empty
+ *      cases rather than a tidy fixed pattern.
+ *   4. RANDOM, MISSING LINKS — even when a doc-type slot exists, ~30%
+ *      of the time its Doc Link is left blank (record exists, file
+ *      not actually attached yet) — same "missing" pattern the app
+ *      already handles via _cleanDocLink().
+ *   5. MIXED PORTAL ORDER — Onboarding and Transaction rows, across
+ *      every case, are generated then shuffled together at the end,
+ *      so they land interleaved and out of chronological sequence —
+ *      matching a real multi-branch, multi-officer log — rather than
+ *      grouped/sorted by portal or date.
+ *
+ *  Uses a seeded PRNG (mulberry32) so the "random" mix is reproducible
+ *  across reloads instead of reshuffling every time the page opens.
+ *  Change DEMO_SEED for a different mix.
+ * ═══════════════════════════════════════════════════════ */
+const DEMO_SEED = 20260909;
+function _mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const _rng = _mulberry32(DEMO_SEED);
+function _rndInt(min,max){ return Math.floor(_rng()*(max-min+1))+min; } // inclusive both ends
+function _rndPick(arr){ return arr[_rndInt(0,arr.length-1)]; }
+function _shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){ const j=_rndInt(0,i); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+
+const SAMPLE_LINKS = [
+  'https://drive.google.com/file/d/1M6zHZz4hTcLA6ZkVgpaOJnnzeKtS4Dx_/view?usp=drivesdk',
+  'https://drive.google.com/file/d/1IFFE-TR_f__qZTwpwNlqbqT75I9AbC23/view?usp=drivesdk',
+];
+const EXPIRING_DOC_TYPES = ['ID','Passport','Visa','EID','ICP Status'];
+
+/* Transaction Type / Amount — demo-only fields, not present in the
+   source log rows. Generated with this file's own seeded PRNG
+   (_rndPick/_rndInt) so they follow the same "random but reproducible"
+   style as the rest of the generated dataset, keyed per entity so a
+   row always shows the same Type/Amount once rolled. Rolled at
+   dataset-build time in _buildEntityRows() for the generated rows;
+   getTxnDetails() below rolls (and caches) one lazily for any entity
+   that doesn't have one yet, e.g. a brand-new upload. */
+const TRANSACTION_TYPES = ['Remittance','Inward TT','WPS Payment','Forex'];
+const TRANSACTION_DETAILS_MAP = Object.create(null); // key -> {type, amount}
+function getTxnDetails(key){
+  if(!TRANSACTION_DETAILS_MAP[key]){
+    TRANSACTION_DETAILS_MAP[key] = { type: _rndPick(TRANSACTION_TYPES), amount: _rndInt(5,750)*100 };
+  }
+  return TRANSACTION_DETAILS_MAP[key];
+}
+function fmtAmount(n){ return 'AED ' + Number(n).toLocaleString('en-US'); }
+
+/* groupKey("onboarding"/"transaction", entityId) -> {ts(ms), txnId(sec str),
+   personName, branch} — the CASE-level "Transaction" info for the red
+   header chip. Populated as each entity is generated, consumed by
+   buildTransactions() below instead of being guessed from doc rows. */
+const TRANSACTION_META_MAP = Object.create(null);
+
+/* One case's opening timestamp: a specific calendar day (that
+   person's date), with the hour kept in 00:00–15:00 so a same-day
+   +5..6h attachment offset can never roll past midnight. */
+function _caseBaseDate(day){
+  return new Date(day.getFullYear(), day.getMonth(), day.getDate(), _rndInt(0,15), _rndInt(0,59), 0);
+}
+
+function _buildEntityRows(portalLabel, entityId, docTypes, txnPerson, txnBranch, base){
+  const rows = [];
+  const key = (portalLabel==='Onboarding'?'onboarding':'transaction') + '::' + entityId;
+
+  // Weighted doc count: some cases are fully empty, some have just
+  // one document, some two, some a fuller set — genuinely mixed.
+  const roll = _rng();
+  const count = roll<0.15 ? 0 : roll<0.45 ? 1 : roll<0.75 ? 2 : _rndInt(3, docTypes.length);
+  if(count===0) return rows; // nothing on file yet for this case
+
+  const chosenTypes = _shuffle(docTypes.slice()).slice(0,count);
+
+  TRANSACTION_META_MAP[key] = {
+    ts: base.getTime(),
+    txnId: String(toEpochSec(base.getTime())),
+    personName: txnPerson,
+    branch: txnBranch,
+  };
+  if(portalLabel==='Transaction') getTxnDetails(key); // roll it now, at generation time, like the rest of this row's data
+
+  chosenTypes.forEach(dt=>{
+    // Attachment always uploaded AFTER the transaction, same date,
+    // 5–6 hours (+ a few random minutes) later — never equal, never
+    // a different calendar day.
+    const offsetMs = (_rndInt(5,6)*3600 + _rndInt(0,59)*60) * 1000;
+    const uploadDate = new Date(base.getTime() + offsetMs);
+    const txnId = String(toEpochSec(uploadDate.getTime()));
+
+    const hasLink = _rng() < 0.7;              // ~30% left "missing"
+    const docLink = hasLink ? _rndPick(SAMPLE_LINKS) : '';
+
+    let expiry = '';
+    if(EXPIRING_DOC_TYPES.includes(dt.key) && _rng() < 0.5){
+      const expDate = new Date(base.getTime() + _rndInt(-30,180)*86400000); // sometimes already expired
+      expiry = String(toEpochSec(expDate.getTime()));
+    }
+
+    // Usually captured by the same person/branch that opened the
+    // case; occasionally handed off to a colleague — still realistic.
+    const personName = _rng() < 0.5 ? txnPerson : _rndPick(PEOPLE_POOL);
+    const branch      = _rng() < 0.5 ? txnBranch : _rndPick(BRANCH_LIST);
+
+    rows.push([txnId, portalLabel, entityId, dt.key, docLink, expiry, personName, branch]);
+  });
+
+  return rows;
+}
+
+/* 5 branches × 5 people × 5 dates each, with 10 Transaction cases +
+   10 Onboarding cases opened per person per date (2,500 cases total).
+   Entity IDs auto-increment across the whole run, same numbering
+   scheme as before (Transaction ~2606… / Onboarding ~900…). */
+function _buildHardcodedDataset(){
+  let rows=[];
+  let txnSeq=260600000000, empSeq=90000000;
+  const today=new Date(2026,8,9,9,0,0); // fixed "today" so the mix is reproducible
+  const dateOffsets=[4,3,2,1,0]; // 5 dates per person, ending today
+
+  PERSON_LIST.forEach(person=>{
+    dateOffsets.forEach(offsetDays=>{
+      const day=new Date(today.getTime()-offsetDays*86400000);
+      for(let i=0;i<10;i++){ // 10 Transaction cases this day
+        const base=_caseBaseDate(day);
+        rows=rows.concat(_buildEntityRows('Transaction', String(txnSeq++), TRANSACTION_DOC_TYPES, person.name, person.branch, base));
+      }
+      for(let i=0;i<10;i++){ // 10 Onboarding cases this day
+        const base=_caseBaseDate(day);
+        rows=rows.concat(_buildEntityRows('Onboarding', String(empSeq++), ONBOARDING_DOC_TYPES, person.name, person.branch, base));
+      }
+    });
+  });
+  return _shuffle(rows); // Onboarding/Transaction interleaved, not grouped, not date-sorted
+}
+
+const HARDCODED_DOC_LOG = _buildHardcodedDataset();
 
 /* ═══════════════════════════════════════════════════════
  *  PRACTICAL CACHE LAYER — localStorage
@@ -546,6 +762,10 @@ let portalFilter  = 'all';   // all | transaction | onboarding
 let dateFilter    = 'all';   // all | 'YYYY-MM-DD'
 let selectedKey   = null;    // "<portal>::<entityId>" of the selected row
 
+let viewMode      = 'cashier';  // cashier | management
+let branchFilter  = 'all';      // all | <branch name>
+let userFilter    = 'all';      // all | <person name>
+
 const _s = v => (v!==null&&v!==undefined&&v!=='') ? String(v).trim() : '';
 
 /* ═══════════════════════════════════════════════════════
@@ -661,6 +881,8 @@ function normaliseLogRow(r, recTs){
       docLink,
       expiryTs: toEpochSec(expMs),          // unix seconds, e.g. 1788907920
       ts:       dtTs || recTs || 0,
+      personName: _s(r[6]) || '',           // who captured/uploaded THIS attachment
+      branch:     _s(r[7]) || '',           // which branch it was captured at
     };
   }
   const portal = _portalFromRaw(r['Portal']||r['portal']||'');
@@ -681,6 +903,8 @@ function normaliseLogRow(r, recTs){
     docLink,
     expiryTs: toEpochSec(expMs),
     ts:       dtTs || recTs || 0,
+    personName: _s(r['Person Name']||r['personName']||r['Uploaded By']||''),
+    branch:     _s(r['Branch']||r['branch']||''),
   };
 }
 
@@ -700,7 +924,19 @@ function buildTransactions(){
     if(r.ts > t.ts) t.ts = r.ts;
   });
   transactions = [...map.values()];
-  transactions.forEach(t=>t.docs.sort((a,b)=>b.ts-a.ts)); // newest doc first
+  transactions.forEach(t=>{
+    t.docs.sort((a,b)=>b.ts-a.ts); // newest doc first
+    // t.txnMeta = the CASE-level "Transaction" info shown in the header's
+    // red box: whoever's attachment opened this entity's Portal record
+    // (earliest ts among its docs), and when. Distinct from the black-box
+    // "Attachment" info, which is per-document and changes with the tab.
+    t.txnMeta = t.docs.reduce((min,d)=> (!min || d.ts < min.ts) ? d : min, null);
+    if(t.portal==='transaction'){
+      const d = getTxnDetails(t.key);
+      t.txnType = d.type;
+      t.txnAmount = d.amount;
+    }
+  });
   transactions.sort((a,b)=>b.ts-a.ts);
   buildDateFilterOptions();
 }
@@ -765,7 +1001,7 @@ async function loadInitialData(){
 
   await loadDocLog();
   buildTransactions();
-  renderTable();
+  initViewFilters(); // also performs the initial renderTable()
 }
 
 /* Silent refresh on cache change (push / poll) */
@@ -847,6 +1083,7 @@ function closeSearchIfEmpty(){
 function setPortalFilter(p){
   portalFilter = p;
   ['all','transaction','onboarding'].forEach(k=>document.getElementById('filter-'+k).classList.toggle('active',k===p));
+  buildDateFilterOptions();
   renderTable();
 }
 
@@ -863,18 +1100,32 @@ function dateLabelFromKey(key){
   const [y,m,d] = key.split('-');
   return `${d}/${m}/${y}`;
 }
+/* Rows in scope for the date dropdown + the "Showing X of Y" total.
+   Applies every filter EXCEPT the date itself (that's what this list
+   is used to build) and the free-text search (too granular to drive
+   a dropdown). So picking a Branch/User/Portal narrows down both
+   which dates are offered and what the "total" count means. */
+function scopeRowsForDateAndCount(){
+  return transactions.filter(t=>{
+    if(portalFilter!=='all' && t.portal!==portalFilter) return false;
+    if(branchFilter!=='all' && (!t.txnMeta || t.txnMeta.branch!==branchFilter)) return false;
+    if(userFilter!=='all' && (!t.txnMeta || t.txnMeta.personName!==userFilter)) return false;
+    return true;
+  });
+}
 function buildDateFilterOptions(){
   const sel = document.getElementById('date-filter');
   if(!sel) return;
+  const scope = scopeRowsForDateAndCount(); // respects current Branch/User/Portal selection
   const counts = new Map();
-  transactions.forEach(t=>{
+  scope.forEach(t=>{
     const k = dateKeyFromTs(t.ts);
     if(!k) return;
     counts.set(k, (counts.get(k)||0)+1);
   });
   const keys = [...counts.keys()].sort((a,b)=>b.localeCompare(a)); // newest first
   const prevValue = sel.value || dateFilter || 'all';
-  sel.innerHTML = `<option value="all">All Dates (${transactions.length})</option>` +
+  sel.innerHTML = `<option value="all">All Dates (${scope.length})</option>` +
     keys.map(k=>`<option value="${k}">${dateLabelFromKey(k)} (${counts.get(k)})</option>`).join('');
   if(prevValue!=='all' && counts.has(prevValue)){
     sel.value = prevValue;
@@ -887,6 +1138,99 @@ function buildDateFilterOptions(){
 function setDateFilter(v){
   dateFilter = v;
   renderTable();
+}
+
+/* ═══════════════════════════════════════════════════════
+ *  VIEW MODE (Cashier / Management) + BRANCH / USER FILTERS
+ *  Cashier: Branch + User are locked to CURRENT_USER and the
+ *    dropdowns are disabled — only that person's own data shows.
+ *  Management: Branch + User dropdowns are enabled and default to
+ *    "All", so any branch/user combination can be inspected.
+ * ═══════════════════════════════════════════════════════ */
+function populateBranchFilter(){
+  const sel = document.getElementById('branch-filter');
+  if(!sel) return;
+  const prev = sel.value || branchFilter;
+  sel.innerHTML = `<option value="all">All Branches</option>` +
+    BRANCH_LIST.map(b=>`<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+  sel.value = BRANCH_LIST.includes(prev) ? prev : 'all';
+  branchFilter = sel.value;
+}
+function populateUserFilter(){
+  const sel = document.getElementById('user-filter');
+  if(!sel) return;
+  const prev = sel.value || userFilter;
+  const pool = branchFilter==='all' ? PERSON_LIST : PERSON_LIST.filter(p=>p.branch===branchFilter);
+  sel.innerHTML = `<option value="all">All Users</option>` +
+    pool.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  sel.value = pool.some(p=>p.name===prev) ? prev : 'all';
+  userFilter = sel.value;
+}
+function setBranchFilter(v){
+  branchFilter = v;
+  populateUserFilter(); // narrow the user list to the chosen branch
+  maybeLockCashierIdentity();
+  buildDateFilterOptions(); // Branch selection also reshapes which dates/totals are offered
+  renderTable();
+}
+function setUserFilter(v){
+  userFilter = v;
+  maybeLockCashierIdentity();
+  buildDateFilterOptions(); // User selection also reshapes which dates/totals are offered
+  renderTable();
+}
+function setViewMode(mode){
+  viewMode = mode;
+  document.getElementById('view-cashier').classList.toggle('active', mode==='cashier');
+  document.getElementById('view-management').classList.toggle('active', mode==='management');
+  const branchSel = document.getElementById('branch-filter');
+  const userSel   = document.getElementById('user-filter');
+  const lockBtn   = document.getElementById('cashier-lock-btn');
+  if(mode==='cashier'){
+    // Cashier identity is permanently fixed — no picking, ever.
+    branchFilter = FIXED_CASHIER_IDENTITY.branch;
+    userFilter   = FIXED_CASHIER_IDENTITY.name;
+    populateBranchFilter(); branchSel.value = FIXED_CASHIER_IDENTITY.branch;
+    populateUserFilter();   userSel.value   = FIXED_CASHIER_IDENTITY.name;
+    branchSel.disabled = true;
+    userSel.disabled   = true;
+    if(lockBtn) lockBtn.style.display = 'none'; // nothing to change — no lock/unlock affordance needed
+  } else {
+    branchSel.disabled = false;
+    userSel.disabled   = false;
+    branchFilter = 'all';
+    userFilter   = 'all';
+    populateBranchFilter();
+    populateUserFilter();
+    if(lockBtn) lockBtn.style.display = 'none';
+  }
+  buildDateFilterOptions();
+  renderTable();
+}
+/* Called after every Branch/User dropdown change. Once both are set to
+   a real (non-"all") value that's a genuine pairing, lock it in as this
+   device's fixed Cashier identity for good. */
+function maybeLockCashierIdentity(){
+  if(viewMode!=='cashier') return;
+  if(branchFilter==='all' || userFilter==='all') return;
+  const valid = PERSON_LIST.some(p=>p.name===userFilter && p.branch===branchFilter);
+  if(!valid) return;
+  setCashierIdentity(userFilter, branchFilter);
+  document.getElementById('branch-filter').disabled = true;
+  document.getElementById('user-filter').disabled   = true;
+  const lockBtn = document.getElementById('cashier-lock-btn');
+  if(lockBtn) lockBtn.style.display = 'inline-flex';
+  toast(`Locked in as ${userFilter} · ${branchFilter}`);
+}
+function changeCashierIdentity(){
+  if(!confirm('Change your fixed Cashier identity? You will need to pick your Branch and User again.')) return;
+  clearCashierIdentity();
+  setViewMode('cashier');
+}
+function initViewFilters(){
+  populateBranchFilter();
+  populateUserFilter();
+  setViewMode('cashier'); // default view on load
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -941,6 +1285,8 @@ function renderTable(){
   let rows = transactions.filter(t=>{
     if(portalFilter!=='all' && t.portal!==portalFilter) return false;
     if(dateFilter!=='all' && dateKeyFromTs(t.ts)!==dateFilter) return false;
+    if(branchFilter!=='all' && (!t.txnMeta || t.txnMeta.branch!==branchFilter)) return false;
+    if(userFilter!=='all' && (!t.txnMeta || t.txnMeta.personName!==userFilter)) return false;
     if(q){
       const hitEntity = String(t.entityId).toLowerCase().includes(q);
       const hitTxn = t.docs.some(d=>String(d.txnId).toLowerCase().includes(q));
@@ -968,13 +1314,16 @@ function renderTable(){
       <td class="chk-col"><input type="checkbox" ${checked} onclick="event.stopPropagation();toggleSelect('${t.key}')"/></td>
       <td><span class="txn-mono">${fmtEpochSec(toEpochSec(t.ts))}</span></td>
       <td>${portalBadge}</td>
-      <td><span style="font-family:var(--mono);font-size:11px;">${t.entityId}</span>${name?` <span style="color:var(--text3);">· ${name}</span>`:''}</td>
+      <td>${t.portal==='transaction'
+          ? `<span style="font-family:var(--mono);font-size:11px;">${t.entityId}</span> <span style="color:var(--text3);">- ${escapeHtml(t.txnType)} - ${fmtAmount(t.txnAmount)}</span>`
+          : `<span style="font-family:var(--mono);font-size:11px;">${t.entityId}</span>${name?` <span style="color:var(--text3);">- ${escapeHtml(name)}</span>`:''}`}</td>
       <td>${docsBadge(t)}</td>
       <td>${viewBtn}</td>
     </tr>`;
   }).join('');
 
-  footer.innerHTML = `<i class="ti ti-table" style="font-size:13px;"></i> Showing <strong>${rows.length}</strong> of <strong>${transactions.length}</strong> entities`;
+  const scopeTotal = scopeRowsForDateAndCount().length; // total under the current Branch/User/Portal selection
+  footer.innerHTML = `<i class="ti ti-table" style="font-size:13px;"></i> Showing <strong>${rows.length}</strong> of <strong>${scopeTotal}</strong> entities`;
   updateSelectionUI();
   animateAllTicks();
 }
@@ -1011,15 +1360,14 @@ function openPanel(iconClass,title,wide){
 function setPanelWide(on){
   document.getElementById('dp-panel').classList.toggle('dp-panel-wide', !!on);
 }
-function setHeadMeta(rowsHtml){
-  document.getElementById('dp-head-meta').innerHTML = `
-    <details class="dp-meta-drop">
-      <summary class="dp-meta-summary"><i class="ti ti-info-circle"></i> Details<i class="ti ti-chevron-down"></i></summary>
-      <div class="preview-meta">${rowsHtml}</div>
-    </details>`;
-}
+/* Header-row doc-type pills ("Passport / ID / Visa / ICP Status") */
+function setHeadTabs(html){ document.getElementById('dp-head-tabs').innerHTML = html||''; }
+/* RED BOX — per-entity transaction chip (Transaction Date&Time · Person · Branch) */
+function setHeadTxn(html){ document.getElementById('dp-head-txn').innerHTML = html||''; }
+/* BLACK BOX — per-document attachment strip (Attachment Date&Time · Person · Branch) */
+function setHeadAttach(html){ document.getElementById('dp-head-attach').innerHTML = html||''; }
 function clearHeadMeta(){
-  document.getElementById('dp-head-meta').innerHTML='';
+  setHeadTabs(''); setHeadTxn(''); setHeadAttach('');
 }
 function closePanel(){
   document.getElementById('dp-overlay').classList.remove('open');
@@ -1073,6 +1421,7 @@ function renderDocGallery(key,activeIdx){
       ${dd.expiryTs && dd.expiryTs*1000<Date.now() ? '<i class="ti ti-alert-triangle warn-dot"></i>' : ''}
     </button>`;
   }).join('');
+  setHeadTabs(tabs);
 
   let mediaHtml;
   if(d.docLink && d.docLink.startsWith('http')){
@@ -1089,15 +1438,25 @@ function renderDocGallery(key,activeIdx){
     mediaHtml = `<div style="padding:36px 16px;text-align:center;color:var(--text3);background:var(--bg3);border-radius:var(--radius-lg);"><i class="ti ti-file-unknown" style="font-size:34px;display:block;margin-bottom:10px;opacity:.35;"></i><div style="font-size:12px;">No preview available</div></div>`;
   }
 
-  body.innerHTML = `
-    <div class="doc-gallery-tabs">${tabs}</div>
-    <div class="ppb">${mediaHtml}</div>`;
+  body.innerHTML = `<div class="ppb">${mediaHtml}</div>`;
 
-  setHeadMeta(`
-      <div class="pmi"><span class="k"><i class="ti ${info?info.icon:'ti-file'}"></i> Doc Type</span><span class="v">${docTypeLabel(t.portal,d.docType)}</span></div>
-      <div class="pmi"><span class="k">Upload Date</span><span class="v" style="font-size:10px;">${d.txnId}</span></div>
-      <div class="pmi"><span class="k">Date Creation</span><span class="v">${fmtEpochSec(+d.txnId)}</span></div>
-      ${d.expiryTs?`<div class="pmi"><span class="k">Exp Date</span><span class="v">${fmtEpochSec(d.expiryTs,false)}</span></div>`:''}`);
+  /* RED BOX — Transaction Date & Time · Person Name · Branch.
+     This is entity/case-level (t.txnMeta = the earliest attachment on
+     file), so it stays the same no matter which tab is active. */
+  const tm = t.txnMeta;
+  setHeadTxn(tm ? `
+      <span class="txn-lbl"><i class="ti ti-file-invoice"></i> Transaction</span>
+      <span class="txn-ln mono">${escapeHtml(fmtEpochSec(+tm.txnId))}</span>
+      <span class="txn-ln">${escapeHtml(tm.personName||'—')} · ${escapeHtml(tm.branch||'—')}</span>` : '');
+
+  /* BLACK BOX — Attachment Date & Time · Person Name · Branch, for
+     the DOCUMENT currently selected in the tabs above (d). */
+  setHeadAttach(`
+      <div class="attach-item"><span class="k"><i class="ti ${info?info.icon:'ti-file'}"></i> Doc Type</span><span class="v">${escapeHtml(docTypeLabel(t.portal,d.docType))}</span></div>
+      <div class="attach-item"><span class="k"><i class="ti ti-paperclip"></i> Attachment Date &amp; Time</span><span class="v">${escapeHtml(fmtEpochSec(+d.txnId))}</span></div>
+      <div class="attach-item"><span class="k"><i class="ti ti-user"></i> Person Name</span><span class="v" style="font-family:var(--font);">${escapeHtml(d.personName||'—')}</span></div>
+      <div class="attach-item"><span class="k"><i class="ti ti-building-bank"></i> Branch</span><span class="v" style="font-family:var(--font);">${escapeHtml(d.branch||'—')}</span></div>
+      ${d.expiryTs?`<div class="attach-item"><span class="k">Exp Date</span><span class="v">${escapeHtml(fmtEpochSec(d.expiryTs,false))}</span></div>`:''}`);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1123,15 +1482,18 @@ function buildEDDFormHtml(t){
   const latestTxn = t.docs[0] || {};
   const generatedOn = fmtEpochSec(nowEpochSec());
 
+  const tm = t.txnMeta;
   const docRows = docs.length ? docs.map(d=>{
     const expired = d.expiryTs && (d.expiryTs*1000 < Date.now());
     return `<tr>
       <td>${escapeHtml(docTypeLabel(t.portal,d.docType))}</td>
       <td class="mono">${escapeHtml(d.txnId)}</td>
       <td>${escapeHtml(fmtEpochSec(+d.txnId))}</td>
+      <td>${escapeHtml(d.personName||'—')}</td>
+      <td>${escapeHtml(d.branch||'—')}</td>
       <td>${d.expiryTs?escapeHtml(fmtEpochSec(d.expiryTs,false)):'—'}${d.expiryTs?` <span class="${expired?'flag-bad':'flag-ok'}">${expired?'(Expired)':'(Valid)'}</span>`:''}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="4" style="text-align:center;color:#888;">No supporting documents on file</td></tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:#888;">No supporting documents on file</td></tr>`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"/><title>EDD Form — ${escapeHtml(t.entityId)}</title>
@@ -1179,6 +1541,8 @@ function buildEDDFormHtml(t){
       <div class="kv"><span class="k">Portal</span><span class="v">Transaction</span></div>
       <div class="kv"><span class="k">Latest Transaction ID</span><span class="v">${escapeHtml(latestTxn.txnId||'—')}</span></div>
       <div class="kv"><span class="k">Transaction Date</span><span class="v">${escapeHtml(fmtEpochSec(toEpochSec(t.ts)))}</span></div>
+      <div class="kv"><span class="k">Case Opened By</span><span class="v">${escapeHtml(tm?tm.personName||'—':'—')}</span></div>
+      <div class="kv"><span class="k">Branch</span><span class="v">${escapeHtml(tm?tm.branch||'—':'—')}</span></div>
       <div class="kv"><span class="k">Documents on File</span><span class="v">${docs.length}</span></div>
     </div>
   </div>
@@ -1186,7 +1550,7 @@ function buildEDDFormHtml(t){
   <div class="section">
     <h4>Supporting Documents</h4>
     <table class="doc-tbl">
-      <thead><tr><th>Doc Type</th><th>Txn ID</th><th>Upload Date</th><th>Expiry</th></tr></thead>
+      <thead><tr><th>Doc Type</th><th>Txn ID</th><th>Upload Date</th><th>Person Name</th><th>Branch</th><th>Expiry</th></tr></thead>
       <tbody>${docRows}</tbody>
     </table>
   </div>
@@ -1276,7 +1640,7 @@ let _uploadState = null; // { portal, entityId, docType, file }
 function openUploadFlow(key){
   const t = transactions.find(x=>x.key===key);
   if(!t){ toast('Select a row first','error'); return; }
-  _uploadState = { portal:t.portal, entityId:t.entityId, docType:null, file:null };
+  _uploadState = { portal:t.portal, entityId:t.entityId, docType:null, file:null, personName:'', branch:'' };
   openPanel('ti-upload','Upload Document');
   renderUploadStep1();
 }
@@ -1297,8 +1661,8 @@ function renderUploadStep1(){
   body.innerHTML = `
     <div class="confirm-strip">
       <div>
-        <div class="cn">${s.portal==='onboarding'?'Onboarding':'Transaction'} · ${s.entityId}</div>
-        <div class="cs">${resolveEntityName(s.entityId)||'&nbsp;'}</div>
+        <div class="cn">${s.entityId}${resolveEntityName(s.entityId) ? ' - '+escapeHtml(resolveEntityName(s.entityId)) : ''}</div>
+        <div class="cs">${s.portal==='onboarding'?'Onboarding':'Transaction'}</div>
       </div>
     </div>
     ${docTypePicker}
@@ -1309,6 +1673,17 @@ function renderUploadStep1(){
         <i class="ti ti-cloud-upload"></i>
         <p id="upload-file-label">Click or drag &amp; drop<br><span style="font-size:9.5px;opacity:.6;">JPG · PNG · WEBP · PDF · max 8 MB</span></p>
       </div>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Person Name <span style="font-weight:400;color:var(--text3);">(who is capturing this document)</span> <span class="req">*</span></label>
+      <input type="text" class="text-input" id="upload-person" placeholder="e.g. Ahmed Al Mansoori" value="${escapeHtml(s.personName||'')}" oninput="_uploadState.personName=this.value"/>
+    </div>
+    <div class="field" style="margin-bottom:14px;">
+      <label>Branch <span class="req">*</span></label>
+      <select class="text-input" id="upload-branch" onchange="_uploadState.branch=this.value">
+        <option value="" ${s.branch?'':'selected'} disabled>Select branch…</option>
+        ${BRANCH_LIST.map(b=>`<option value="${escapeHtml(b)}" ${s.branch===b?'selected':''}>${escapeHtml(b)}</option>`).join('')}
+      </select>
     </div>
     <div class="form-actions">
       <button class="btn btn-ghost btn-sm" onclick="closePanel()"><i class="ti ti-x"></i> Cancel</button>
@@ -1349,6 +1724,10 @@ function goToConfirmStep(){
   const s=_uploadState;
   if(!s.docType){ toast('Select a document type','error'); return; }
   if(!s.file){ toast('Select a file first','error'); return; }
+  s.personName = _s(document.getElementById('upload-person')?.value || s.personName);
+  s.branch     = _s(document.getElementById('upload-branch')?.value || s.branch);
+  if(!s.personName){ toast('Enter the person name capturing this document','error'); return; }
+  if(!s.branch){ toast('Select a branch','error'); return; }
   const MAX=8*1024*1024;
   if(s.file.size>MAX){ toast(`File too large (${(s.file.size/1024/1024).toFixed(1)} MB) — max 8 MB`,'error'); return; }
   // Freeze the Transaction ID (unix seconds) at review time so the value
@@ -1373,11 +1752,13 @@ function renderConfirmStep(){
     </div>
     <div class="preview-meta">
       <div class="pmi"><span class="k">Portal</span><span class="v">${s.portal==='onboarding'?'Onboarding':'Transaction'}</span></div>
-      <div class="pmi"><span class="k">Entity</span><span class="v">${s.entityId}${name?' · '+name:''}</span></div>
+      <div class="pmi"><span class="k">Entity</span><span class="v">${s.entityId}${name?' - '+escapeHtml(name):''}</span></div>
       <div class="pmi"><span class="k">Doc Type</span><span class="v">${dtInfo.label}</span></div>
       <div class="pmi"><span class="k">File</span><span class="v" style="font-size:10.5px;">${s.file.name}</span></div>
       <div class="pmi"><span class="k">Txn ID (Unix)</span><span class="v" style="font-size:10px;">${s.txnId}</span></div>
       <div class="pmi"><span class="k">Upload Date</span><span class="v">${fmtEpochSec(+s.txnId)}</span></div>
+      <div class="pmi"><span class="k">Person Name</span><span class="v" style="font-family:var(--font);">${escapeHtml(s.personName)}</span></div>
+      <div class="pmi"><span class="k">Branch</span><span class="v" style="font-family:var(--font);">${escapeHtml(s.branch)}</span></div>
     </div>
     <div id="upload-gs-status"></div>
     <div class="form-actions">
@@ -1419,7 +1800,7 @@ async function submitUpload(){
   gs.innerHTML=`<i class="ti ti-loader spinner"></i> Saving to cache…`;
 
   // Row shape matches HARDCODED_DOC_LOG exactly:
-  // [ Transaction ID, Portal, ID, Doc Type, Doc Link, Exp Date ]
+  // [ Transaction ID, Portal, ID, Doc Type, Doc Link, Exp Date, Person Name, Branch ]
   const row = [
     String(txnId),
     s.portal==='onboarding' ? 'Onboarding' : 'Transaction',
@@ -1427,6 +1808,8 @@ async function submitUpload(){
     s.docType,
     base64,                       // the file itself, stored + previewed straight from cache
     String(s.expiryTs||''),
+    s.personName,
+    s.branch,
   ];
 
   const saved = addRowToLocalCache(row);
