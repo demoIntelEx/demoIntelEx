@@ -409,6 +409,38 @@ button{font-family:var(--font);cursor:pointer;}
   border-radius:50%;
 }
 .tf-btn-help{ background:var(--tf-help); }
+/* "?" moved out of the input box to sit between the label and the field;
+   "tf-embed-btn" is position:absolute by default, so reset that here. */
+.tf-help-standalone{
+  position:static;
+  transform:none;
+  flex-shrink:0;
+}
+/* small circular rate/convert icon that now lives inside the LC>FC / FC>LC boxes */
+.tf-rate-icon{
+  background:var(--teal);
+  color:#fff;
+  font-size:11px;
+  pointer-events:none;
+}
+/* Quick Task icon button — replaces the static rate icon inside the LC > FC
+   box; interactive, shows "Request special rate" as a native title tooltip
+   on hover. */
+.tf-quicktask-btn{
+  background:var(--teal);
+  color:#fff;
+  font-size:11px;
+  cursor:pointer;
+  border:none;
+  transition:background .15s,transform .1s;
+}
+.tf-quicktask-btn:hover{
+  background:var(--brand);
+  transform:scale(1.06);
+}
+.tf-quicktask-btn:active{
+  transform:scale(.96);
+}
 .tf-btn-green{
   background:var(--tf-green);
   width:29.5px;
@@ -653,17 +685,18 @@ function remittanceFormHtml(){
               <div class="tf-col">
                 <div class="tf-field-row">
                   <div class="tf-field-label">LC &gt; FC</div>
+                  <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn tf-help-standalone" title="LC to FC conversion rate">?</button>
                   <div class="tf-input-embed">
                     <input type="text" value="0.00" id="tf-lc-fc" class="tf-embed-input tf-pad-icon tf-computed" readonly>
-                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="LC to FC conversion rate">?</button>
+                    <button type="button" id="tf-quicktask-btn" class="tf-embed-btn tf-icon-btn tf-circle-btn tf-quicktask-btn" title="Request special rate"><i class="ti ti-bolt"></i></button>
                   </div>
                 </div>
 
                 <div class="tf-field-row">
                   <div class="tf-field-label">FC &gt; LC</div>
+                  <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn tf-help-standalone" title="FC to LC conversion rate">?</button>
                   <div class="tf-input-embed">
-                    <input type="text" value="0.00" id="tf-fc-lc" class="tf-embed-input tf-pad-icon tf-computed" readonly>
-                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="FC to LC conversion rate">?</button>
+                    <input type="text" value="0.00" id="tf-fc-lc" class="tf-embed-input tf-computed" readonly>
                   </div>
                 </div>
 
@@ -686,7 +719,7 @@ function remittanceFormHtml(){
                   <div class="tf-field-label">Charges</div>
                   <div class="tf-input-embed">
                     <input type="text" value="0.00" id="tf-charges" class="tf-embed-input tf-pad-icon tf-computed" readonly>
-                    <button type="button" class="tf-embed-btn tf-icon-btn tf-btn-help tf-circle-btn" title="Help">?</button>
+                    <button type="button" id="tf-quicktask-charges-btn" class="tf-embed-btn tf-icon-btn tf-circle-btn tf-quicktask-btn" title="Special Charges"><i class="ti ti-bolt"></i></button>
                   </div>
                 </div>
 
