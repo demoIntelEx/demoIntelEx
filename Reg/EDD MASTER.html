@@ -156,19 +156,19 @@
       <div class="field"><label>PEP?</label>
         <div class="yn-pair" data-group="isPEP">
           <label><input type="checkbox" id="f_isPEP_yes">Yes</label>
-          <label><input type="checkbox" id="f_isPEP_no">No</label>
+          <label><input type="checkbox" id="f_isPEP_no" checked>No</label>
         </div>
       </div>
       <div class="field"><label>Third party?</label>
         <div class="yn-pair" data-group="isThirdParty">
           <label><input type="checkbox" id="f_isThirdParty_yes">Yes</label>
-          <label><input type="checkbox" id="f_isThirdParty_no">No</label>
+          <label><input type="checkbox" id="f_isThirdParty_no" checked>No</label>
         </div>
       </div>
       <div class="field"><label>Dual nationality?</label>
         <div class="yn-pair" data-group="hasDualNationality">
           <label><input type="checkbox" id="f_hasDualNationality_yes">Yes</label>
-          <label><input type="checkbox" id="f_hasDualNationality_no">No</label>
+          <label><input type="checkbox" id="f_hasDualNationality_no" checked>No</label>
         </div>
       </div>
     </div>
@@ -201,26 +201,32 @@
     <div class="field-grid">
       <div class="field"><label>Satisfied with details?</label>
         <div class="yn-pair" data-group="satisfiedWithDetails">
-          <label><input type="checkbox" id="f_satisfiedWithDetails_yes">Yes</label>
+          <label><input type="checkbox" id="f_satisfiedWithDetails_yes" checked>Yes</label>
           <label><input type="checkbox" id="f_satisfiedWithDetails_no">No</label>
         </div>
       </div>
       <div class="field"><label>Suspicious nature?</label>
         <div class="yn-pair" data-group="suspiciousNature">
           <label><input type="checkbox" id="f_suspiciousNature_yes">Yes</label>
-          <label><input type="checkbox" id="f_suspiciousNature_no">No</label>
+          <label><input type="checkbox" id="f_suspiciousNature_no" checked>No</label>
         </div>
       </div>
       <div class="field"><label>Recommend investigation?</label>
         <div class="yn-pair" data-group="recommendInvestigation">
           <label><input type="checkbox" id="f_recommendInvestigation_yes">Yes</label>
-          <label><input type="checkbox" id="f_recommendInvestigation_no">No</label>
+          <label><input type="checkbox" id="f_recommendInvestigation_no" checked>No</label>
         </div>
       </div>
       <div class="field"><label>Review Date</label><input type="text" id="f_reviewDate"></div>
       <div class="field"><label>Reviewer Name</label><input type="text" id="f_reviewerName"></div>
       <div class="field"><label>EIN</label><input type="text" id="f_reviewerEIN"></div>
-      <div class="field span-full"><label>Branch Comments</label><textarea id="f_branchComments"></textarea></div>
+      <div class="field span-full">
+        <label style="display:flex; align-items:center; justify-content:space-between;">
+          Branch Comments
+          <button type="button" id="regenComment" style="background:none;border:none;color:var(--text-dim);font-family:var(--font-mono);font-size:0.65rem;cursor:pointer;text-decoration:underline;padding:0;">regenerate</button>
+        </label>
+        <textarea id="f_branchComments"></textarea>
+      </div>
     </div>
   </div>
 
@@ -235,27 +241,29 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
   const PAGE1_SCHEMA = {
     type: "object",
     properties: {
-      transactionReferenceNo: { type: "string" },
-      dateOfTransaction: { type: "string" },
-      branch: { type: "string" },
-      countryOfRemittance: { type: "string" },
-      amountAED: { type: "string" },
-      currencyAmountFCY: { type: "string" },
-      modeOfPayment: { type: "string" },
-      sourceOfFund: { type: "string" },
-      purposeOfTransaction: { type: "string" },
-      customerProfileNo: { type: "string" },
-      fullName: { type: "string" },
-      profession: { type: "string" },
-      sponsorEmployerName: { type: "string" },
-      isPEP: { type: "string", enum: ["Yes", "No", "Unknown"] },
-      isThirdParty: { type: "string", enum: ["Yes", "No", "Unknown"] },
-      hasDualNationality: { type: "string", enum: ["Yes", "No", "Unknown"] },
-      beneficiaryFullName: { type: "string" },
-      beneficiaryNationality: { type: "string" },
-      relationship: { type: "string" },
-      transactionType: { type: "string" },
-      customerRemarks: { type: "string" }
+      transactionReferenceNo: { type: "string", description: "Transaction / reference number, often labeled 'Txn No.', 'Reference No.' or similar." },
+      dateOfTransaction: { type: "string", description: "Date (and time if present) of the transaction, often labeled 'Date', 'Date & Time' or 'Txn Date'." },
+      branch: { type: "string", description: "Branch name or code where the transaction took place." },
+      countryOfRemittance: { type: "string", description: "Destination country of the remittance, often labeled 'Destination Country'." },
+      amountAED: { type: "string", description: "Total amount in AED / local currency, often labeled 'Total', 'LC Amount' or 'Net Total'." },
+      currencyAmountFCY: { type: "string", description: "Foreign currency amount and currency code, often labeled 'FC Amount'." },
+      modeOfPayment: { type: "string", description: "How the customer paid, e.g. Cash, Bank Transfer, Card." },
+      sourceOfFund: { type: "string", description: "Customer's source of income/funds, often labeled 'Source' (e.g. Salaried, Business, Self-employed), found in the customer details section." },
+      purposeOfTransaction: { type: "string", description: "Stated purpose of the transaction, often labeled 'Purpose'." },
+      customerProfileNo: { type: "string", description: "Customer's profile/reference ID, often labeled 'CIN' or 'Customer Profile No.'." },
+      fullName: { type: "string", description: "Remitting customer's full name, found in the customer/remitter details section." },
+      profession: { type: "string", description: "Customer's profession or occupation, if explicitly stated." },
+      sponsorEmployerName: { type: "string", description: "Customer's sponsor or employer name, if explicitly stated." },
+      isPEP: { type: "string", enum: ["Yes", "No", "Unknown"], description: "Whether the customer is a Politically Exposed Person, if explicitly stated; otherwise Unknown." },
+      isThirdParty: { type: "string", enum: ["Yes", "No", "Unknown"], description: "Whether the transaction is associated with a third party, if explicitly stated; otherwise Unknown." },
+      hasDualNationality: { type: "string", enum: ["Yes", "No", "Unknown"], description: "Whether the customer holds dual nationality, if explicitly stated; otherwise Unknown." },
+      beneficiaryFullName: { type: "string", description: "Beneficiary/recipient's full name, found in the beneficiary details section." },
+      beneficiaryNationality: { type: "string", description: "Beneficiary's nationality, ONLY if explicitly stated. Do not infer from the destination country." },
+      relationship: { type: "string", description: "Customer's relationship to the beneficiary (e.g. Self, Wife, Friend), if explicitly stated." },
+      transactionType: { type: "string", description: "Type of transaction, e.g. Outward Remittance, Inward Remittance." },
+      customerRemarks: { type: "string", description: "Any declaration or remarks text confirmed/signed by the customer." },
+      reviewerEIN: { type: "string", description: "The staff/employee ID number who processed the transaction. Often appears together with the staff name in an 'ID | Name' format (e.g. '1094 | AFAN.GHAFOOR') near a confirmation or signature line — in that case this is the number before the '|'." },
+      reviewerName: { type: "string", description: "The staff/teller name who processed the transaction. Often appears together with the staff ID in an 'ID | Name' format (e.g. '1094 | AFAN.GHAFOOR') near a confirmation or signature line — in that case this is the text after the '|'." }
     }
   };
 
@@ -339,6 +347,14 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
+  document.getElementById('regenComment').addEventListener('click', buildBranchComment);
+  ['f_relationship', 'f_sourceOfFund', 'f_purposeOfTransaction'].forEach((id) => {
+    document.getElementById(id).addEventListener('input', buildBranchComment);
+  });
+  document.getElementById('f_dateOfTransaction').addEventListener('input', () => {
+    document.getElementById('f_reviewDate').value = document.getElementById('f_dateOfTransaction').value;
+  });
+
   document.getElementById('loadBtn').addEventListener('click', () => {
     document.getElementById('fileInput1').click();
   });
@@ -385,15 +401,194 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
     else if (value === 'No') { noBox.checked = true; yesBox.checked = false; }
   }
 
+  // ---------- text hygiene ----------
+  // The receipt embeds Arabic labels that pdf.js returns as unmapped glyphs
+  // ("(cid:993)" runs / non-ASCII noise). Strip them before anything else.
+  function cleanText(str) {
+    return String(str == null ? '' : str)
+      .replace(/\(cid:\d+\)/g, ' ')
+      .replace(/[^\x20-\x7E]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function sanitize(value, kind) {
+    let v = cleanText(value);
+    if (!v || v === '-') return '';
+    if (kind === 'amount') v = v.replace(/[^0-9.,]/g, '');
+    else if (kind === 'money') v = v.replace(/[^A-Za-z0-9., ]/g, ' ');
+    else if (kind === 'digits') v = v.replace(/[^0-9]/g, '');
+    else if (kind === 'name') v = v.replace(/[^A-Za-z0-9 ]/g, ' ');
+    else if (kind === 'date') { const m = v.match(/\d{4}-\d{2}-\d{2}/); v = m ? m[0] : v.replace(/[^A-Za-z0-9\-\/ ]/g, ' '); }
+    else v = v.replace(/[^A-Za-z0-9 \-\/,.]/g, ' ');
+    return v.replace(/\s+/g, ' ').trim();
+  }
+
+  // ---------- receipt parser ----------
+  // Every label printed on this receipt. Longest first so "Bank Branch" wins
+  // over "Bank" and "Net Total" over "Total".
+  const RECEIPT_LABELS = [
+    'Branch/ Bank Code', 'VAT (5%) on charges', 'Destination Country', 'Beneficiary Charges',
+    'Service Provider', 'Discount Applied', 'Rate (LC->FC)', 'Rate (FC->LC)', 'Branch Address',
+    'Account Type', 'FC Receivable', 'Resident Type', 'Issued Place', 'Issued Date',
+    'Expiry Date', 'Bank Branch', 'LC Received', 'Txn Message', 'Date & Time', 'Nationality',
+    'Mobile No.', 'LC Balance', 'Net Charge', 'Account No.', 'FC Amount', 'LC Amount',
+    'Net Total', 'Commision', 'In Words', 'Acc. No.', 'Txn No.', 'Txn PIN', 'TRN No.',
+    'ID Type', 'Charges', 'Purpose', 'Address', 'Status', 'Branch', 'Source', 'ID No.',
+    'Total', 'Name', 'Bank', 'Mode', 'DOB', 'CIN'
+  ].sort((a, b) => b.length - a.length);
+
+  // Labels only ever start in one of three x-bands (left labels, mid labels,
+  // right labels). Anything else that happens to read like a label -- e.g. the
+  // word "Branch" inside "Al Nakheel Branch" -- is part of a value.
+  function isLabelColumn(x, width) {
+    const f = x / width;
+    return f < 0.16 || (f >= 0.35 && f < 0.53) || (f >= 0.69 && f < 0.90);
+  }
+
+  function buildRows(items) {
+    const rows = [];
+    const TOL = 3;
+    items.forEach((it) => {
+      let row = rows.find((r) => Math.abs(r.y - it.y) < TOL);
+      if (!row) { row = { y: it.y, items: [] }; rows.push(row); }
+      row.items.push(it);
+    });
+    rows.sort((a, b) => b.y - a.y);            // pdf.js y grows upward
+    rows.forEach((r) => r.items.sort((a, b) => a.x - b.x));
+    return rows;
+  }
+
+  function rowText(row) {
+    let text = '';
+    const offsets = [];
+    row.items.forEach((it) => {
+      if (text) text += ' ';
+      offsets.push({ pos: text.length, x: it.x });
+      text += it.str;
+    });
+    return { text, offsets };
+  }
+
+  // Walk one column of rows top-to-bottom, tracking which section heading we
+  // are under, and pull out every "Label value" pair on each row.
+  function parseColumn(rows, firstSection, headings, width, sink, lines) {
+    let current = firstSection;
+    rows.forEach((row) => {
+      const { text, offsets } = rowText(row);
+      if (!text) return;
+      lines.push(text);
+      const upper = text.toUpperCase();
+      const heading = headings.find((h) => upper.startsWith(h.match));
+      if (heading) { current = heading.section; return; }
+
+      const hits = [];
+      offsets.forEach(({ pos, x }) => {
+        if (!isLabelColumn(x, width)) return;
+        for (const label of RECEIPT_LABELS) {
+          if (text.substr(pos, label.length).toUpperCase() === label.toUpperCase()) {
+            const after = pos + label.length;
+            if (after >= text.length || text[after] === ' ') hits.push({ pos, label });
+            break;
+          }
+        }
+      });
+      hits.sort((a, b) => a.pos - b.pos);
+
+      const kept = [];
+      let prevEnd = -1;
+      hits.forEach((h) => {
+        if (h.pos < prevEnd) return;           // drop labels nested in a longer one
+        kept.push(h);
+        prevEnd = h.pos + h.label.length;
+      });
+
+      kept.forEach((h, i) => {
+        const stop = (i + 1 < kept.length) ? kept[i + 1].pos : text.length;
+        const value = text.slice(h.pos + h.label.length, stop).trim();
+        if (!sink[current]) sink[current] = {};
+        if (!(h.label in sink[current])) sink[current][h.label] = value;
+      });
+    });
+  }
+
+  function parseReceipt(items, width) {
+    const sections = {};
+    const lines = [];
+    const left = buildRows(items.filter((i) => i.x / width < 0.69));
+    const right = buildRows(items.filter((i) => i.x / width >= 0.69));
+    parseColumn(left, 'header', [
+      { match: 'CUSTOMER DETAILS', section: 'customer' },
+      { match: 'BENEFICIARY DETAILS', section: 'beneficiary' }
+    ], width, sections, lines);
+    parseColumn(right, 'invoice', [
+      { match: 'TRANSACTION DETAILS', section: 'transaction' },
+      { match: 'MODE OF PAYMENT', section: 'payment' }
+    ], width, sections, lines);
+    return { sections, text: lines.join('\n') };
+  }
+
+  // Map the parsed receipt onto EDD form fields. Section membership is what
+  // decides each value -- remitter from Customer Details, beneficiary from
+  // Beneficiary Details, AED from Mode of Payment > Total, FCY from
+  // Transaction Details > FC Amount.
+  function deriveFields(parsed) {
+    const S = parsed.sections;
+    const get = (sec, label) => ((S[sec] || {})[label] || '').trim();
+    const all = parsed.text;
+    const out = {};
+
+    out.transactionReferenceNo = sanitize((get('header', 'Txn No.').match(/[A-Za-z0-9]+/) || [''])[0], 'default');
+    out.dateOfTransaction = sanitize(get('header', 'Date & Time'), 'date');
+    out.branch = sanitize(get('header', 'Branch'), 'default');
+
+    out.fullName = sanitize(get('customer', 'Name'), 'name');
+    out.customerProfileNo = sanitize(get('customer', 'CIN'), 'digits');
+    out.sourceOfFund = sanitize(get('customer', 'Source'), 'default');
+    out.purposeOfTransaction = sanitize(get('customer', 'Purpose'), 'default');
+
+    out.beneficiaryFullName = sanitize(get('beneficiary', 'Name'), 'name');
+    out.countryOfRemittance = sanitize(get('beneficiary', 'Destination Country'), 'default');
+
+    out.amountAED = sanitize(get('payment', 'Total') || get('transaction', 'Net Total'), 'amount');
+    out.currencyAmountFCY = sanitize(get('transaction', 'FC Amount'), 'money');
+    out.modeOfPayment = sanitize(get('payment', 'Mode'), 'default');
+
+    const type = all.match(/\b(OUTWARD|INWARD)\s+REMITTANCE\b/i);
+    if (type) out.transactionType = sanitize(type[0], 'default').toUpperCase();
+
+    const remark = all.match(/I confirm[^|\n]*/i);
+    if (remark) out.customerRemarks = sanitize(remark[0], 'default');
+
+    const staff = all.match(/(\d{2,8})\s*\|\s*([A-Za-z][A-Za-z.\- ]{2,40})/);
+    if (staff) {
+      out.reviewerEIN = sanitize(staff[1], 'digits');
+      out.reviewerName = sanitize(staff[2], 'name');
+    }
+
+    Object.keys(out).forEach((k) => { if (!out[k]) delete out[k]; });
+    return out;
+  }
+
   async function extractPdfInput(file) {
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     const page = await pdf.getPage(1);
+    const width = page.getViewport({ scale: 1 }).width;
     const textContent = await page.getTextContent();
-    const text = textContent.items.map((it) => it.str).join(' ').trim();
 
-    if (text.length > 40) {
-      return { mode: 'text', text };
+    const items = [];
+    textContent.items.forEach((it) => {
+      const str = cleanText(it.str);
+      if (!str) return;
+      items.push({ str, x: it.transform[4], y: it.transform[5] });
+    });
+
+    if (items.length) {
+      const parsed = parseReceipt(items, width);
+      if (parsed.text.length > 40) {
+        return { mode: 'text', text: parsed.text, fields: deriveFields(parsed) };
+      }
     }
     // Likely a scanned/rasterized PDF page — render it to an image instead.
     const viewport = page.getViewport({ scale: 2 });
@@ -403,7 +598,44 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
     const ctx = canvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport }).promise;
     const bitmap = await createImageBitmap(canvas);
-    return { mode: 'image', bitmap };
+    return { mode: 'image', bitmap, fields: {} };
+  }
+
+  function relationshipPhrase(rel) {
+    const r = (rel || '').trim();
+    if (!r) return 'the beneficiary';
+    if (/^self$/i.test(r)) return 'himself/herself';
+    return 'his/her ' + r.toLowerCase();
+  }
+
+  function buildBranchComment() {
+    const relationship = document.getElementById('f_relationship').value;
+    const source = document.getElementById('f_sourceOfFund').value.trim();
+    const purpose = document.getElementById('f_purposeOfTransaction').value.trim();
+    const sentence = `Customer wants to send money to ${relationshipPhrase(relationship)} using his/her ${source || '[source of fund]'} for ${purpose || '[purpose]'}.`;
+    document.getElementById('f_branchComments').value = sentence;
+  }
+
+  const FIELD_KINDS = {
+    transactionReferenceNo: 'default', dateOfTransaction: 'date', branch: 'default',
+    countryOfRemittance: 'default', amountAED: 'amount', currencyAmountFCY: 'money',
+    modeOfPayment: 'default', sourceOfFund: 'default', purposeOfTransaction: 'default',
+    customerProfileNo: 'digits', fullName: 'name', profession: 'default',
+    sponsorEmployerName: 'default', beneficiaryFullName: 'name',
+    beneficiaryNationality: 'default', relationship: 'default', transactionType: 'default',
+    customerRemarks: 'default', reviewerName: 'name', reviewerEIN: 'digits'
+  };
+
+  function applyFields(data, onlyEmpty) {
+    Object.keys(TEXT_FIELD_MAP).forEach((key) => {
+      if (!(key in data)) return;
+      const el = document.getElementById('f_' + key);
+      if (!el) return;
+      if (onlyEmpty && el.value.trim()) return;
+      const value = sanitize(data[key], FIELD_KINDS[key] || 'default');
+      if (!value || value.toLowerCase() === 'unknown') return;
+      el.value = value;
+    });
   }
 
   async function analyzeFile(file) {
@@ -411,13 +643,44 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
     const progressTrack = document.getElementById('progressTrack1');
     const progressFill = document.getElementById('progressFill1');
     btn.disabled = true;
-    setStatus(1, 'Preparing on-device model…', 'busy');
+    setStatus(1, 'Reading file…', 'busy');
     progressTrack.classList.add('show');
     progressFill.style.width = '0%';
 
-    const promptText = 'Extract the handwritten or printed fields from this Enhanced Due Diligence (EDD) form, matching the schema. For yes/no checkbox questions, report Yes, No, or Unknown if not marked. Leave a field empty string if it is blank.';
+    const promptText = 'You are extracting structured data from a money transfer / remittance receipt to populate an Enhanced Due Diligence (EDD) form. The text is given column by column, top to bottom, under its section heading. Remitter fields (full name, CIN, source of fund, purpose) come ONLY from the Customer Details section. Beneficiary fields come ONLY from the Beneficiary Details section. The AED amount is the Total under Mode of Payment. The foreign currency amount is FC Amount under Transaction Details. Return English letters and digits only, no other scripts and no symbols. If a value is not explicitly present, return an empty string rather than guessing. For yes/no fields, use Unknown if not explicitly stated.';
+
+    let extracted = null;
+    let parsedCount = 0;
 
     try {
+      // Pass 1 — deterministic parse of the receipt layout. This is the source
+      // of truth; the model only fills what the layout could not supply.
+      if (file.type === 'application/pdf') {
+        extracted = await extractPdfInput(file);
+        if (extracted.fields) {
+          applyFields(extracted.fields, false);
+          parsedCount = Object.keys(extracted.fields).length;
+        }
+      } else {
+        const bitmap = await createImageBitmap(file);
+        extracted = { mode: 'image', bitmap, fields: {} };
+      }
+      if (parsedCount) {
+        document.getElementById('f_reviewDate').value = document.getElementById('f_dateOfTransaction').value;
+        buildBranchComment();
+        setStatus(1, 'Read ' + parsedCount + ' fields from the receipt layout…', 'busy');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus(1, 'Could not read the file: ' + (err.message || err), 'err');
+      progressTrack.classList.remove('show');
+      btn.disabled = false;
+      return;
+    }
+
+    // Pass 2 — on-device model, gap filling only.
+    try {
+      setStatus(1, parsedCount ? 'Filling remaining fields on-device…' : 'Preparing on-device model…', 'busy');
       const session = await LanguageModel.create({
         expectedInputs: [{ type: "image" }],
         monitor(m) {
@@ -430,20 +693,9 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
       });
       progressTrack.classList.remove('show');
 
-      let messageContent;
-      if (file.type === 'application/pdf') {
-        setStatus(1, 'Reading PDF…', 'busy');
-        const extracted = await extractPdfInput(file);
-        if (extracted.mode === 'text') {
-          messageContent = [{ type: 'text', value: promptText + '\n\nForm content:\n' + extracted.text }];
-        } else {
-          messageContent = [{ type: 'text', value: promptText }, { type: 'image', value: extracted.bitmap }];
-        }
-      } else {
-        setStatus(1, 'Reading image…', 'busy');
-        const bitmap = await createImageBitmap(file);
-        messageContent = [{ type: 'text', value: promptText }, { type: 'image', value: bitmap }];
-      }
+      const messageContent = (extracted.mode === 'text')
+        ? [{ type: 'text', value: promptText + '\n\nForm content:\n' + extracted.text }]
+        : [{ type: 'text', value: promptText }, { type: 'image', value: extracted.bitmap }];
 
       setStatus(1, 'Running inference on-device…', 'busy');
       const result = await session.prompt(
@@ -452,16 +704,23 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
       );
       const d = JSON.parse(result);
 
-      Object.keys(TEXT_FIELD_MAP).forEach((k) => { if (k in d) setVal('f_' + k, d[k]); });
+      applyFields(d, true);
       if (d.isPEP && d.isPEP !== 'Unknown') setYesNo('isPEP', d.isPEP);
       if (d.isThirdParty && d.isThirdParty !== 'Unknown') setYesNo('isThirdParty', d.isThirdParty);
       if (d.hasDualNationality && d.hasDualNationality !== 'Unknown') setYesNo('hasDualNationality', d.hasDualNationality);
+      document.getElementById('f_reviewDate').value = document.getElementById('f_dateOfTransaction').value;
+      buildBranchComment();
 
       setStatus(1, 'Done — review fields below.', 'ok');
       try { session.destroy(); } catch (e) {}
     } catch (err) {
       console.error(err);
-      setStatus(1, 'Failed: ' + (err.message || err), 'err');
+      progressTrack.classList.remove('show');
+      if (parsedCount) {
+        setStatus(1, 'Filled ' + parsedCount + ' fields from the receipt. On-device model unavailable — check the rest manually.', 'ok');
+      } else {
+        setStatus(1, 'Failed: ' + (err.message || err), 'err');
+      }
     } finally {
       btn.disabled = false;
     }
@@ -488,6 +747,7 @@ window.__EDD_PDF_BASE64__ = "JVBERi0xLjcNJeLjz9MNCjQwOCAwIG9iag08PC9MaW5lYXJpemV
       const form = pdfDoc.getForm();
 
       function setText(fieldName, value) {
+        value = sanitize(value, 'default');
         if (value === undefined || value === null || value === '') return;
         try { form.getTextField(fieldName).setText(String(value)); }
         catch (e) { console.warn('text field missing:', fieldName); }
